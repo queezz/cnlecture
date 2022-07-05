@@ -3,18 +3,25 @@ import numpy as np
 
 
 def polygon(n=6):
+    """
+    Calculate vertices for an n-gone, inscirbed in a unit circle.
+    First vertice at 1.
+    """
     t = np.arange(0, np.pi * 2 * (n + 1) / n, 2 * np.pi / n)
     return (np.cos(t), np.sin(t))
 
 
 def vec(x, y, c="k"):
     """
-    plot vector from origint to a point
+    Plot a vector from the origint to a point.
     """
     plt.plot([0, x], [0, y], c=c)
 
 
 def plot_circ(r=1, **kws):
+    """
+    Plot a circle.
+    """
     cx, cy = polygon(100)
     c = kws.get("c", "k")
     ls = kws.get("ls", "-")
@@ -28,7 +35,7 @@ def plot_circ(r=1, **kws):
 
 def roots_of_one(power=3):
     """
-    Plot roots of powers roots of 1. 
+    Plot roots of 1. 
     """
     plot_circ()
 
@@ -52,7 +59,7 @@ def cneq(a, b, threshold=1e-14):
 
 def cnin(a, seq):
     """
-    Check if a complex number a is in sequenc seq
+    Check if a complex number `a` is in a sequenc `seq`
     """
     for z in seq:
         if cneq(a, z):
@@ -62,7 +69,7 @@ def cnin(a, seq):
 
 def cnunique(seq):
     """
-    Remove duplicates from a sequence of complex numbers
+    Remove duplicates from a sequence of complex numbers.
     """
     return [z for n, z in enumerate(seq) if not cnin(z, seq[:n])]
 
