@@ -102,3 +102,31 @@ def primitive_roots(n):
     ax.text(0.3, 0.1, "$m\\frac{2\\pi}{n}$")
     ax.text(1.15, 0.3, "$m$")
 
+
+def modular_surface(power):
+    """
+    Plot modular surface of a polynomial w = z ^ {power}
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+
+    # Create the mesh in polar coordinates and compute corresponding Z.
+    r = np.linspace(0, 1.0, 100)
+    p = np.linspace(0, 2 * np.pi, 50)
+    R, P = np.meshgrid(r, p)
+    W = R ** power  # Modulus of W
+
+    # Express the mesh in the cartesian system.
+    X, Y = R * np.cos(P), R * np.sin(P)
+
+    # Plot the surface.
+    # ax.contour3D(X, Y, W, cmap=plt.cm.viridis)
+    ax.plot_surface(X, Y, W, cmap=plt.cm.viridis)
+
+    # Tweak the limits and add latex math labels.
+    ax.set_zlim(0, 1)
+    ax.set_xlabel(r"$\mathrm{Re}(z)$")
+    ax.set_ylabel(r"$\mathrm{Im}(z)$")
+    ax.set_zlabel(r"$|w|$")
+
+    return fig
