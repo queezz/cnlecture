@@ -11,14 +11,11 @@ def polygon(n=6):
     return (np.cos(t), np.sin(t))
 
 
-def vec(x, y, c="k"):
-    """
-    Plot a vector from the origint to a point.
-    """
-    plt.plot([0, x], [0, y], c=c)
+def vec(a, b, **kws):
+    plt.plot([a.real, b.real], [a.imag, b.imag], "-", **kws)
 
 
-def plot_circ(r=1, **kws):
+def plot_circ(r=1, o=0 + 0j, **kws):
     """
     Plot a circle.
     """
@@ -30,7 +27,7 @@ def plot_circ(r=1, **kws):
             kws.pop(i)
         except:
             pass
-    plt.plot(cx * r, cy * r, c=c, ls=ls, **kws)
+    plt.plot(cx * r + o.real, cy * r + o.imag, c=c, ls=ls, **kws)
 
 
 def roots_of_one(power=3):
@@ -40,7 +37,7 @@ def roots_of_one(power=3):
     plot_circ()
 
     x, y = polygon(power)
-    [vec(i, j) for i, j in zip(x, y)]
+    [vec(0, i + 1j * j) for i, j in zip(x, y)]
     plt.plot(x, y, "-o")
 
     plt.plot([0], [0], "ko")
@@ -92,6 +89,11 @@ def primitive_roots(n):
         if len(d) == n:
             plot_circ(r=r, c="r")
             c, marker = ["r", "o"]
+            col = "C3"
+            vec(0, v, c=col)
+            vec(0, v.conjugate(), c=col)
+            plt.plot(v.real, v.imag, "o", c=col)
+            plt.plot(v.real, -v.imag, "o", c=col)
         else:
             plot_circ(r=r, c="gray", ls="--")
             c, marker = ["gray", "s"]
