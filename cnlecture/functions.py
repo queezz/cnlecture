@@ -12,7 +12,7 @@ def polygon(n=6):
 
 
 def vec(a, b, **kws):
-    plt.plot([a.real, b.real], [a.imag, b.imag], "-", **kws)
+    plt.plot([a.real, b.real], [a.imag, b.imag], **kws)
 
 
 def plot_circ(r=1, o=0 + 0j, **kws):
