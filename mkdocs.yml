@@ -1,0 +1,87 @@
+site_name: cnlecture
+site_url: https://queezz.github.io/cnlecture/
+site_description: >-
+  Interactive lecture notes on complex numbers — domain coloring,
+  Euler's formula, primitive roots, and geometric intuition.
+site_author: A. K.
+repo_url: https://github.com/queezz/cnlecture
+repo_name: queezz/cnlecture
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: deep purple
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+  font:
+    text: Source Sans 3
+    code: JetBrains Mono
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: true
+            docstring_style: numpy
+  - mkdocs-jupyter:
+      execute: false
+      include_source: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex:
+      generic: true
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started: getting_started.md
+  - Examples:
+      - Overview: examples.md
+      - Notebooks:
+          - Primitive Roots: notebooks/PrimitiveRoots.ipynb
+          - Modular Surface: notebooks/ModularSurface.ipynb
+          - Euler's Spiral: notebooks/EulersSpiral.ipynb
+          - Power Series: notebooks/PowerSeries.ipynb
+          - Interactive Demo: notebooks/interactive_demo.ipynb
+  - API Reference:
+      - functions: api/functions.md
+      - cplotting: api/cplotting.md
+  - Known Issues: broken_or_pending.md

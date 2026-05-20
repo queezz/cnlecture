@@ -1,0 +1,9 @@
+/* Slightly wider content for math-heavy pages */
+.md-content {
+  max-width: 900px;
+}
+
+/* Notebook output cells */
+.jp-OutputArea-output {
+  background: var(--md-code-bg-color);
+}

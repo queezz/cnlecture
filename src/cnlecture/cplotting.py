@@ -10,8 +10,6 @@ https://github.com/artmenlope/complex-plotting-tools
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import cmath
 
 
 def colorize(f, a=0.5, log_brightness=True, log_contrast=0.4):
@@ -45,7 +43,7 @@ def colorize(f, a=0.5, log_brightness=True, log_contrast=0.4):
 
     def logb(arg, base):
         """Return the logarithm with base b of arg."""
-        return np.log(base) / np.log(base)
+        return np.log(arg) / np.log(base)
 
     H = (np.pi - np.arctan2(f.imag, -f.real)) / (2 * np.pi)  # Hue.
 
