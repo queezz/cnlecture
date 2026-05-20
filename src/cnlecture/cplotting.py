@@ -7,25 +7,24 @@ Created on Tue Jul  7 13:05:40 2020
 https://github.com/artmenlope/complex-plotting-tools
 """
 
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def colorize(f, a=0.5, log_brightness=True, log_contrast=0.4):
-
     """
     Auxiliar function for creating domain coloring plots.
-    
+
     Given the evaluated function f, returns an array of colors
-    representing the function's phase. 
-    
-    The resulting colors encode the module of the function as 
+    representing the function's phase.
+
+    The resulting colors encode the module of the function as
     the brightness.
 
     Arguments:
 
-        f :: 2D numpy array of complex numbers. Evaluated 
+        f :: 2D numpy array of complex numbers. Evaluated
              function to be plotted.
 
         a :: Float between 0 and 1. Parameter for the brightness.
@@ -47,34 +46,37 @@ def colorize(f, a=0.5, log_brightness=True, log_contrast=0.4):
 
     H = (np.pi - np.arctan2(f.imag, -f.real)) / (2 * np.pi)  # Hue.
 
-    if log_brightness == False:
+    if not log_brightness:
         L = 1 - a ** np.abs(f)  # Brightness.
 
-    if log_brightness == True:
+    if log_brightness:
         L = 1 - a ** np.log(1 + np.abs(f) ** log_contrast)
 
     S = 1  # Saturation.
 
     c = np.vectorize(hls_to_rgb)(H, L, S)  # --> Tuple.
     c = np.array(c)  # The array of colors c is of shape (3,n,m), but it needs to be (m,n,3).
-    c = np.rot90(c.transpose(2, 1, 0), 1)  # Change shape to (m,n,3) and rotate 90 degrees as correction.
+    c = np.rot90(
+        c.transpose(2, 1, 0), 1
+    )  # Change shape to (m,n,3) and rotate 90 degrees as correction.
 
     return c
 
 
-def domain_coloring(x, y, f, figsize=(12, 8), xlabel="Re", ylabel="Im", title=None, grid=False, cmap="hsv"):
-
+def domain_coloring(
+    x, y, f, figsize=(12, 8), xlabel="Re", ylabel="Im", title=None, grid=False, cmap="hsv"
+):
     """
-    Domain coloring plot. 
-    
-    The evaluated function f is transformed to polar form and its 
+    Domain coloring plot.
+
+    The evaluated function f is transformed to polar form and its
     phase is represented using colors. The module is not represented.
-    
-    See https://en.wikipedia.org/wiki/Domain_coloring for more 
+
+    See https://en.wikipedia.org/wiki/Domain_coloring for more
     information.
 
     x, y, f are 2D arrays. f can contain complex numbers.
-    figsize, xlabel, ylabel, title, grid and cmap are parameters 
+    figsize, xlabel, ylabel, title, grid and cmap are parameters
     for the Matplotlib plot.
     """
 
@@ -86,7 +88,7 @@ def domain_coloring(x, y, f, figsize=(12, 8), xlabel="Re", ylabel="Im", title=No
     c_m = cmap  # "twilight", "hsv"
     s_m = matplotlib.cm.ScalarMappable(cmap=c_m, norm=norm)
     s_m.set_array([])
-    fcolors = s_m.to_rgba(arg_f)
+    s_m.to_rgba(arg_f)
 
     # A figure and a 3d subplot.
     fig = plt.figure(figsize=figsize)
@@ -129,22 +131,21 @@ def domain_coloring_illuminated(
     title=None,
     grid=False,
 ):
-
     """
-    Domain coloring plot. 
-    
-    The function f is transformed to polar form and its phase 
+    Domain coloring plot.
+
+    The function f is transformed to polar form and its phase
     is represented using colors. The module is represented using
     the brightness of the colors.
-    
-    See https://en.wikipedia.org/wiki/Domain_coloring for more 
+
+    See https://en.wikipedia.org/wiki/Domain_coloring for more
     information.
 
     Arguments:
 
         x, y :: 2D arrays. They represent the 2D plotting space.
 
-        f :: 2D numpy array of complex numbers. Evaluated 
+        f :: 2D numpy array of complex numbers. Evaluated
              function to be plotted.
 
         a :: Float between 0 and 1. Parameter for the brightness.
@@ -157,12 +158,12 @@ def domain_coloring_illuminated(
 
         log_contrast :: Float. Parameter for the brightness.
 
-        figsize, xlabel, ylabel, title and grid are parameters 
+        figsize, xlabel, ylabel, title and grid are parameters
         for the Matplotlib plot.
     """
 
     img = colorize(f, a, log_brightness, log_contrast)
-    arg_f = np.mod(np.angle(f), 2 * np.pi)  # np.mod ensures argument from 0 to 2*pi
+    np.mod(np.angle(f), 2 * np.pi)  # np.mod ensures argument from 0 to 2*pi
     lim = np.max([x, y])
 
     # initializing the colormap machinery
@@ -215,13 +216,12 @@ def complex_plot3D(
     contour3D=False,
     log_mode=True,
 ):
-
     """
-    3D plot representing he evaluated complex function f. 
-    
-    f is transformed to polar form. The module is represented 
+    3D plot representing he evaluated complex function f.
+
+    f is transformed to polar form. The module is represented
     as a 3d surface and the phase is represented as colors over
-    said surface like in a domain coloring plot. In addition, 
+    said surface like in a domain coloring plot. In addition,
     the module of f is represented like shadows at the bottom
     of the plot. A darker shadow indicates lower values for
     the module.
@@ -230,27 +230,27 @@ def complex_plot3D(
 
         x, y :: 2D arrays. They represent the 2D plotting space.
 
-        f :: 2D numpy array of complex numbers. Evaluated 
+        f :: 2D numpy array of complex numbers. Evaluated
              function to be plotted.
 
-        f_lim :: Float greater than 0. Set the limit of the 
-                 vertical axis. Improves the visualization in 
+        f_lim :: Float greater than 0. Set the limit of the
+                 vertical axis. Improves the visualization in
                  case the module diverges to infinity.
 
-        contour3D :: Boolean. If True, plot a contour over the 
+        contour3D :: Boolean. If True, plot a contour over the
                      f module's plane at the bottom of the plot.
 
-        log_mode :: Boolean. If True, the colors of the module's 
-                    representation will increase in a logarithmic 
+        log_mode :: Boolean. If True, the colors of the module's
+                    representation will increase in a logarithmic
                     way.
 
-        offset, xlabel, ylabel, zlabel, title and grid are parameters 
+        offset, xlabel, ylabel, zlabel, title and grid are parameters
         for Matplotlib.
     """
 
-    if log_mode == True:
+    if log_mode:
         abs_f = np.log2(np.abs(f) + 1)
-    if log_mode == False:
+    if not log_mode:
         abs_f = np.abs(f)
 
     arg_f = np.mod(np.angle(f), 2 * np.pi)  # np.mod ensures argument from 0 to 2*pi
@@ -289,10 +289,12 @@ def complex_plot3D(
     # Plot the modulus' surface with the argument as color.
     ax.plot_surface(x, y, abs_f, linewidth=0, alpha=0.7, cstride=1, rstride=1, facecolors=fcolors)
 
-    if contour3D == True:
+    if contour3D:
         ax.contour3D(x, y, abs_f, alpha=0.5, colors="black", levels=20)
 
-    ax.contourf(x, y, np.log2(abs_f + 1), zdir="z", offset=offset, cmap="gist_yarg_r", levels=50, alpha=1)
+    ax.contourf(
+        x, y, np.log2(abs_f + 1), zdir="z", offset=offset, cmap="gist_yarg_r", levels=50, alpha=1
+    )
 
     # Draw the colorbar
     cbar = plt.colorbar(s_m, ticks=[0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi], pad=0.1)
@@ -317,28 +319,27 @@ def plot_re_im(
     cmap="viridis",
     synchronize_rotations=False,
 ):
-
     """
-    Plot the real and the imaginary parts of the function 
-    f in separated subplots as surfaces. The surfaces can 
-    also be projected into a filled contour plot at the 
+    Plot the real and the imaginary parts of the function
+    f in separated subplots as surfaces. The surfaces can
+    also be projected into a filled contour plot at the
     bottom of the vertical axis.
-    
+
     Arguments:
 
-        x, y :: 2D arrays. They represent the 2D plotting 
+        x, y :: 2D arrays. They represent the 2D plotting
                 space.
 
-        f :: 2D numpy array of complex numbers. Evaluated 
+        f :: 2D numpy array of complex numbers. Evaluated
              function to be plotted.
 
         synchronize_rotations :: Boolean. If True, when using
                                  the Matplotlib's interactive
                                  plotting window and rotating
-                                 a subplot, both subplots will 
+                                 a subplot, both subplots will
                                  synchronize the rotation.
 
-        figsize, alpha, title, grid, contour and cmap are 
+        figsize, alpha, title, grid, contour and cmap are
         parameters for Matplotlib.
     """
 
@@ -375,11 +376,15 @@ def plot_re_im(
 
     ax_im.plot_surface(x, y, f.imag, linewidth=0, alpha=alpha, cstride=1, rstride=1, cmap=cmap)
 
-    if contour == True:
-        ax_re.contourf(x, y, f.real, zdir="z", offset=ax_re.get_zlim()[0], cmap=cmap, levels=50, alpha=1)
-        ax_im.contourf(x, y, f.imag, zdir="z", offset=ax_im.get_zlim()[0], cmap=cmap, levels=50, alpha=1)
+    if contour:
+        ax_re.contourf(
+            x, y, f.real, zdir="z", offset=ax_re.get_zlim()[0], cmap=cmap, levels=50, alpha=1
+        )
+        ax_im.contourf(
+            x, y, f.imag, zdir="z", offset=ax_im.get_zlim()[0], cmap=cmap, levels=50, alpha=1
+        )
 
-    if synchronize_rotations == True:
+    if synchronize_rotations:
 
         def on_move(event):
             if event.inaxes == ax_re:
@@ -399,34 +404,33 @@ def plot_re_im(
 def complex_vector_field(
     x, y, f, figsize=(12, 8), title=None, grid=False, cmap=None, dark_background=False, norm=False
 ):
-
     """
     Plot the complex function f as a 2D vector field.
-    The plotted vectors have the form (Real(f), Imag(f)). 
+    The plotted vectors have the form (Real(f), Imag(f)).
     In polar form, the argument of the function f can
     be represented using a colormap in addition to the
     already visualized orientation of the vectors.
 
     Arguments:
 
-        x, y :: 2D arrays. They represent the 2D plotting 
+        x, y :: 2D arrays. They represent the 2D plotting
                 space.
 
-        f :: 2D numpy array of complex numbers. Evaluated 
+        f :: 2D numpy array of complex numbers. Evaluated
              function to be plotted.
 
-        dark_background :: Boolean. If True, sets the axis 
+        dark_background :: Boolean. If True, sets the axis
                            background color to black.
 
         norm :: Boolean. If True, normalizes the vectors.
 
-        figsize, title, grid and cmap are parameters for 
+        figsize, title, grid and cmap are parameters for
         Matplotlib.
     """
 
     # Vector normalization.
-    if norm == True:
-        r = np.sqrt(f.real ** 2 + f.imag ** 2)
+    if norm:
+        r = np.sqrt(f.real**2 + f.imag**2)
         f = f.real / r + 1j * f.imag / r
 
     # Create the figure and axis.
@@ -436,13 +440,19 @@ def complex_vector_field(
 
     # Colormap.
     if cmap is None:
-
         ax.quiver(
-            x, y, np.real(f), np.imag(f), color="blue", pivot="middle", norm=True, headwidth=6, headlength=7
+            x,
+            y,
+            np.real(f),
+            np.imag(f),
+            color="blue",
+            pivot="middle",
+            norm=True,
+            headwidth=6,
+            headlength=7,
         )
 
     if cmap is not None:
-
         arg_f = np.mod(np.angle(f), 2 * np.pi)
 
         norm = matplotlib.colors.Normalize(vmin=0, vmax=2 * np.pi)
@@ -451,7 +461,17 @@ def complex_vector_field(
         s_m.set_array([])
 
         # Plot the vectors.
-        ax.quiver(x, y, np.real(f), np.imag(f), arg_f, cmap=cmap, pivot="middle", headwidth=6, headlength=7)
+        ax.quiver(
+            x,
+            y,
+            np.real(f),
+            np.imag(f),
+            arg_f,
+            cmap=cmap,
+            pivot="middle",
+            headwidth=6,
+            headlength=7,
+        )
 
         # Add a colorbar.
         cbar = plt.colorbar(s_m, ticks=[0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi], pad=0.1)
@@ -470,7 +490,7 @@ def complex_vector_field(
         ax.set_title(title, fontsize=18, pad=20, usetex=False)
 
     # Dark background.
-    if dark_background == True:
+    if dark_background:
         ax.set_facecolor("black")
 
     plt.tight_layout()
@@ -497,45 +517,44 @@ def complex_streamplot(
     pointlw=1.5,
     pointmarker="o",
 ):
-
     """
     Plot the complex function f as a 2D streamplot.
-    It is similar to a vector field plot where the 
-    plotted vectors have the form (Real(f), Imag(f)). 
+    It is similar to a vector field plot where the
+    plotted vectors have the form (Real(f), Imag(f)).
     In polar form, the argument of the function f can
     be represented using a colormap in addition to the
     already visualized orientation of the stream vectors.
-    The module of f can be represented as the thickness 
-    of the lines of the stream if mod_as_linewidths is 
+    The module of f can be represented as the thickness
+    of the lines of the stream if mod_as_linewidths is
     set to be True. Scatterpoints can also be added to
     the plot.
 
     Arguments:
 
-        x, y :: 2D arrays. They represent the 2D plotting 
+        x, y :: 2D arrays. They represent the 2D plotting
                 space.
 
-        f :: 2D numpy array of complex numbers. Evaluated 
+        f :: 2D numpy array of complex numbers. Evaluated
              function to be plotted.
 
-        dark_background :: Boolean. If True, sets the axis 
+        dark_background :: Boolean. If True, sets the axis
                            background color to black.
 
-        mod_as_linewidths :: Boolean. If True, the module 
-                             of f is represented as the 
-                             thickness of the lines of the 
+        mod_as_linewidths :: Boolean. If True, the module
+                             of f is represented as the
+                             thickness of the lines of the
                              stream.
 
-        figsize, title, grid, color, cmap and density are 
+        figsize, title, grid, color, cmap and density are
         parameters for Matplotlib.
 
-        scatterpoints :: List of complex numbers. The points 
-                         contained in this list will be 
+        scatterpoints :: List of complex numbers. The points
+                         contained in this list will be
                          plotted as scatterpoints.
 
-        pointsize, pointcolor, pointalpha, pointedgecolors, 
-        pointlw and pointmarker are parameters defining the 
-        properties of the scatter points. These parameters 
+        pointsize, pointcolor, pointalpha, pointedgecolors,
+        pointlw and pointmarker are parameters defining the
+        properties of the scatter points. These parameters
         are passed to Matplotlib.
     """
 
@@ -546,19 +565,17 @@ def complex_streamplot(
 
     # Colormap.
     if cmap is None:
-
-        if mod_as_linewidths == False:
-
+        if not mod_as_linewidths:
             ax.streamplot(x, y, np.real(f), np.imag(f), color=color, density=density)
 
-        if mod_as_linewidths == True:
-
+        if mod_as_linewidths:
             abs_f = np.log2(np.abs(f) + 1)
             abs_f = abs_f / np.max(abs_f)
-            ax.streamplot(x, y, np.real(f), np.imag(f), color=color, linewidth=7 * abs_f, density=density)
+            ax.streamplot(
+                x, y, np.real(f), np.imag(f), color=color, linewidth=7 * abs_f, density=density
+            )
 
     if cmap is not None:
-
         arg_f = np.mod(np.angle(f), 2 * np.pi)
 
         norm = matplotlib.colors.Normalize(vmin=0, vmax=2 * np.pi)
@@ -566,16 +583,21 @@ def complex_streamplot(
         s_m = matplotlib.cm.ScalarMappable(cmap=c_m, norm=norm)
         s_m.set_array([])
 
-        if mod_as_linewidths == False:
-
+        if not mod_as_linewidths:
             ax.streamplot(x, y, np.real(f), np.imag(f), color=arg_f, cmap=cmap, density=density)
 
-        if mod_as_linewidths == True:
-
+        if mod_as_linewidths:
             abs_f = np.log2(np.abs(f) + 1)
             abs_f = abs_f / np.max(abs_f)
             ax.streamplot(
-                x, y, np.real(f), np.imag(f), color=arg_f, cmap=cmap, linewidth=7 * abs_f, density=density
+                x,
+                y,
+                np.real(f),
+                np.imag(f),
+                color=arg_f,
+                cmap=cmap,
+                linewidth=7 * abs_f,
+                density=density,
             )
 
         cbar = plt.colorbar(s_m, ticks=[0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi], pad=0.1)
@@ -610,7 +632,7 @@ def complex_streamplot(
         ax.set_title(title, fontsize=18, pad=20, usetex=False)
 
     # Set the axis background color to black.
-    if dark_background == True:
+    if dark_background:
         ax.set_facecolor("black")
 
     plt.tight_layout()
@@ -645,46 +667,45 @@ def complex_contour(
     imshow=False,
     imcmap="coolwarm",
 ):
-
     """
-    Plot either the real or the imaginary part of f (or 
-    both) as a contour plot. Scatterpoints can also be 
+    Plot either the real or the imaginary part of f (or
+    both) as a contour plot. Scatterpoints can also be
     added to the plot.
 
     Arguments:
 
-        x, y :: 2D arrays. They represent the 2D plotting 
+        x, y :: 2D arrays. They represent the 2D plotting
                 space.
 
-        f :: 2D numpy array of complex numbers. Evaluated 
+        f :: 2D numpy array of complex numbers. Evaluated
              function to be plotted.
 
-        mode :: "real", "imag", "modulus" or "both". 
-                Choose between plotting the contour of 
-                either the real part of f, the imaginary 
+        mode :: "real", "imag", "modulus" or "both".
+                Choose between plotting the contour of
+                either the real part of f, the imaginary
                 part or both.
 
-        figsize, levels, xlabel, ylabel, clabels, title, 
-        usetex, grid, axis, cmap ls and lw are parameters 
-        for Matplotlib. levels can be either a list or an 
+        figsize, levels, xlabel, ylabel, clabels, title,
+        usetex, grid, axis, cmap ls and lw are parameters
+        for Matplotlib. levels can be either a list or an
         integer.
 
-        scatterpoints :: List of complex numbers. The points 
-                         contained in this list will be 
+        scatterpoints :: List of complex numbers. The points
+                         contained in this list will be
                          plotted as scatterpoints.
 
-        pointsize, pointcolor, pointalpha, pointedgecolors, 
-        pointlw and pointmarker are parameters defining the 
-        properties of the scatter points. These parameters 
+        pointsize, pointcolor, pointalpha, pointedgecolors,
+        pointlw and pointmarker are parameters defining the
+        properties of the scatter points. These parameters
         are passed to Matplotlib.
 
-        dark_background :: Boolean. If True, sets the axis 
+        dark_background :: Boolean. If True, sets the axis
                            background color to black.
 
-        imshow :: Boolean. If True, shows the module of f as 
+        imshow :: Boolean. If True, shows the module of f as
                   an imshow plot. Only works if mode!="both".
 
-        imcmap :: String. Colormap for the imshow plot (only 
+        imcmap :: String. Colormap for the imshow plot (only
                   used if imshow=True and mode!="both").
     """
 
@@ -722,7 +743,6 @@ def complex_contour(
 
     # Mode of the plot.
     if mode != "both":
-
         if mode == "imag":
             f2 = f.imag
         if mode == "real":
@@ -735,10 +755,10 @@ def complex_contour(
         # cont = ax.contourf(x, y, np.array(np.abs(f2), dtype=float), levels=levels, cmap=cmap)
 
         # Labels for the contour lines.
-        if clabels == True:
+        if clabels:
             ax.clabel(cont, fontsize=9, inline=1)
 
-        if imshow == True:
+        if imshow:
             ax.imshow(
                 np.array(f2, dtype=float),
                 cmap=imcmap,
@@ -748,17 +768,16 @@ def complex_contour(
             )  # cmap="GnBu" #force float type in f
 
     if mode == "both":
-
         cont_re = ax.contour(
             x, y, f.real, levels=levels, linestyles=ls, linewidths=lw, colors="C3"
         )  # C0 = default red
-        if clabels == True:
+        if clabels:
             ax.clabel(cont_re, fontsize=9, inline=1)
 
         cont_im = ax.contour(
             x, y, f.imag, levels=levels, linestyles=ls, linewidths=lw, colors="C0"
         )  # C3 = default blue
-        if clabels == True:
+        if clabels:
             ax.clabel(cont_im, fontsize=9, inline=1)
 
         # Add a legend to the contour plot.
@@ -782,7 +801,7 @@ def complex_contour(
         )
 
     # Dark background.
-    if dark_background == True:
+    if dark_background:
         ax.set_facecolor("black")
 
     plt.tight_layout()

@@ -75,6 +75,7 @@ nav:
   - Getting Started: getting_started.md
   - Examples:
       - Overview: examples.md
+      - "Euler's Formula (power series)": examples/euler_spiral.md
       - Notebooks:
           - Primitive Roots: notebooks/PrimitiveRoots.ipynb
           - Modular Surface: notebooks/ModularSurface.ipynb
@@ -84,4 +85,5 @@ nav:
   - API Reference:
       - functions: api/functions.md
       - cplotting: api/cplotting.md
+      - "visualizations.euler": api/visualizations_euler.md
   - Known Issues: broken_or_pending.md

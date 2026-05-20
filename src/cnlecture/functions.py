@@ -25,14 +25,14 @@ def plot_circ(r=1, o=0 + 0j, **kws):
     for i in ["c", "ls"]:
         try:
             kws.pop(i)
-        except:
+        except KeyError:
             pass
     plt.plot(cx * r + o.real, cy * r + o.imag, c=c, ls=ls, **kws)
 
 
 def roots_of_one(power=3):
     """
-    Plot roots of 1. 
+    Plot roots of 1.
     """
     plot_circ()
 
@@ -73,7 +73,7 @@ def cnunique(seq):
 
 def primitive_roots(n):
     """
-    Plot primitive roots for an n-gone in red. 
+    Plot primitive roots for an n-gone in red.
     Other roots are indicated in gray.
     """
     roots_of_one(n)
@@ -116,7 +116,7 @@ def modular_surface(power):
     r = np.linspace(0, 1.0, 100)
     p = np.linspace(0, 2 * np.pi, 50)
     R, P = np.meshgrid(r, p)
-    W = R ** power  # Modulus of W
+    W = R**power  # Modulus of W
 
     # Express the mesh in the cartesian system.
     X, Y = R * np.cos(P), R * np.sin(P)

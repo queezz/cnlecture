@@ -1,7 +1,6 @@
 """Basic smoke tests — run with: pytest"""
 
 import matplotlib
-import pytest
 
 matplotlib.use("Agg")  # non-interactive backend for CI
 
