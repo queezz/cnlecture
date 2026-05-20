@@ -47,11 +47,22 @@ cp.domain_coloring_illuminated(X, Y, Z**2 - 1)
 
 ---
 
-## Interactive Demonstrations
+## Notebooks
 
-The `examples/` folder also contains:
+All notebooks live in [`examples/`](https://github.com/queezz/cnlecture/tree/master/examples)
+on GitHub.  Clone the repo and open them in JupyterLab:
 
-- **`_interactive_notebook.ipynb`** — ipywidgets slider controlling plot parameters
-- **`interactive_demo.ipynb`** — Plotly-based rotating complex number
+```bash
+git clone https://github.com/queezz/cnlecture.git
+cd cnlecture
+pip install -e ".[dev]"
+jupyter lab
+```
 
-See the [Notebooks](notebooks/interactive_demo.ipynb) section for the rendered versions.
+| Notebook | Topic |
+|----------|-------|
+| [`PrimitiveRoots.ipynb`](https://github.com/queezz/cnlecture/blob/master/examples/PrimitiveRoots.ipynb) | Roots of unity, primitive roots |
+| [`ModularSurface.ipynb`](https://github.com/queezz/cnlecture/blob/master/examples/ModularSurface.ipynb) | Modular surface \(\|w\| = \|z^n\|\) |
+| [`EulersSpiral.ipynb`](https://github.com/queezz/cnlecture/blob/master/examples/EulersSpiral.ipynb) | Euler's formula power-series construction |
+| [`PowerSeries.ipynb`](https://github.com/queezz/cnlecture/blob/master/examples/PowerSeries.ipynb) | Power series convergence |
+| [`interactive_demo.ipynb`](https://github.com/queezz/cnlecture/blob/master/examples/interactive_demo.ipynb) | Plotly + ipywidgets demo |

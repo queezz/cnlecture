@@ -34,7 +34,7 @@ The chain reshapes itself in real time.
 
 <div style="width:100%; aspect-ratio:680/620; max-width:720px; margin:auto;">
   <iframe
-    src="../assets/plots/euler_spiral.html"
+    src="{{ base_url }}/assets/plots/euler_spiral.html"
     style="width:100%; height:100%; border:none; border-radius:6px;"
     loading="lazy"
     title="Euler spiral — power-series construction">

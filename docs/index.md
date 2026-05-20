@@ -50,11 +50,11 @@ cp.domain_coloring(X, Y, f)
 
 | Topic | Notebook |
 |-------|----------|
-| Primitive roots of unity | [PrimitiveRoots](notebooks/PrimitiveRoots.ipynb) |
-| Modular surfaces \( \|w\| = \|z^n\| \) | [ModularSurface](notebooks/ModularSurface.ipynb) |
-| Euler's spiral (Cornu spiral) | [EulersSpiral](notebooks/EulersSpiral.ipynb) |
-| Power series convergence | [PowerSeries](notebooks/PowerSeries.ipynb) |
-| Interactive parameter demo | [interactive_demo](notebooks/interactive_demo.ipynb) |
+| Primitive roots of unity | [PrimitiveRoots](https://github.com/queezz/cnlecture/blob/master/examples/PrimitiveRoots.ipynb) |
+| Modular surfaces \( \|w\| = \|z^n\| \) | [ModularSurface](https://github.com/queezz/cnlecture/blob/master/examples/ModularSurface.ipynb) |
+| Euler's formula (power series) | [EulersSpiral](examples/euler_spiral.md) |
+| Power series convergence | [PowerSeries](https://github.com/queezz/cnlecture/blob/master/examples/PowerSeries.ipynb) |
+| Interactive parameter demo | [interactive_demo](https://github.com/queezz/cnlecture/blob/master/examples/interactive_demo.ipynb) |
 
 ---
 

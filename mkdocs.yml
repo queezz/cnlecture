@@ -36,6 +36,10 @@ theme:
 
 plugins:
   - search
+  - macros:
+      # Enables {{ base_url }} in markdown pages (defined in main.py).
+      # Code blocks are automatically excluded from Jinja2 processing.
+      on_error_fail: true
   - mkdocstrings:
       handlers:
         python:
@@ -43,9 +47,6 @@ plugins:
           options:
             show_source: true
             docstring_style: numpy
-  - mkdocs-jupyter:
-      execute: false
-      include_source: true
 
 markdown_extensions:
   - admonition
@@ -76,12 +77,6 @@ nav:
   - Examples:
       - Overview: examples.md
       - "Euler's Formula (power series)": examples/euler_spiral.md
-      - Notebooks:
-          - Primitive Roots: notebooks/PrimitiveRoots.ipynb
-          - Modular Surface: notebooks/ModularSurface.ipynb
-          - Euler's Spiral: notebooks/EulersSpiral.ipynb
-          - Power Series: notebooks/PowerSeries.ipynb
-          - Interactive Demo: notebooks/interactive_demo.ipynb
   - API Reference:
       - functions: api/functions.md
       - cplotting: api/cplotting.md
