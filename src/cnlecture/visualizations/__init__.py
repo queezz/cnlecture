@@ -6,10 +6,28 @@ from cnlecture.visualizations.euler import (
     export_euler_spiral_html,
     make_euler_spiral_plotly,
 )
+from cnlecture.visualizations.quadrilateral_squares import (
+    default_quadrilateral_vertices,
+    export_quadrilateral_squares_html,
+    make_quadrilateral_squares_bokeh,
+    opposite_center_identity,
+    opposite_center_segments,
+    quadrilateral_half_sides,
+    square_centers,
+    square_vertices,
+)
 
 __all__ = [
     "euler_series_terms",
     "euler_series_points",
     "make_euler_spiral_plotly",
     "export_euler_spiral_html",
+    "default_quadrilateral_vertices",
+    "quadrilateral_half_sides",
+    "square_vertices",
+    "square_centers",
+    "opposite_center_segments",
+    "opposite_center_identity",
+    "make_quadrilateral_squares_bokeh",
+    "export_quadrilateral_squares_html",
 ]

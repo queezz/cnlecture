@@ -66,3 +66,14 @@ jupyter lab
 | [`EulersSpiral.ipynb`](https://github.com/queezz/cnlecture/blob/master/examples/EulersSpiral.ipynb) | Euler's formula power-series construction |
 | [`PowerSeries.ipynb`](https://github.com/queezz/cnlecture/blob/master/examples/PowerSeries.ipynb) | Power series convergence |
 | [`interactive_demo.ipynb`](https://github.com/queezz/cnlecture/blob/master/examples/interactive_demo.ipynb) | Plotly + ipywidgets demo |
+
+---
+
+## Squares on the Sides of a Quadrilateral
+
+Drag three vertices of a quadrilateral while one vertex stays fixed at the
+origin.  Squares are built on the sides \(2a,2b,2c,2d\), and the figure tracks
+the complex identity \(A+iB=0\) for the segments connecting opposite square
+centers.
+
+See the interactive page: [Squares on the Sides of a Quadrilateral](examples/quadrilateral_squares.md).

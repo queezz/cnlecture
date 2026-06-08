@@ -33,6 +33,7 @@ dev = [
     "mkdocs-jupyter",
     "mkdocs-macros-plugin",
     "plotly",
+    "bokeh",
     "ipywidgets",
     "jupyterlab",
 ]
