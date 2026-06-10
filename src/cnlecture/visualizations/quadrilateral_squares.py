@@ -110,8 +110,8 @@ def default_quadrilateral_vertices() -> ComplexArray:
         [
             0 + 0j,
             -0.7 + 1.3j,
-            1.7 + 2.0j,
-            2.2 + 0.4j,
+            0.75 + 2.78j,
+            1.594 + 1.538j,
         ],
         dtype=complex,
     )
@@ -295,13 +295,25 @@ def make_quadrilateral_squares_bokeh(
         size=10,
         color="#111827",
     )
-    vertex_renderer = plot.scatter(
+    plot.scatter(
         x="x",
         y="y",
         source=vertex_source,
-        size=13,
+        size=22,
         color="#ef4444",
-        alpha=0.9,
+        alpha=0.82,
+        line_color="#991b1b",
+        line_width=1.5,
+    )
+    vertex_handle_renderer = plot.scatter(
+        x="x",
+        y="y",
+        source=vertex_source,
+        marker="square",
+        size=34,
+        fill_color="#ef4444",
+        fill_alpha=0.12,
+        line_alpha=0.0,
     )
     plot.add_layout(
         LabelSet(
@@ -340,7 +352,7 @@ def make_quadrilateral_squares_bokeh(
         )
     )
 
-    draw_tool = PointDrawTool(renderers=[vertex_renderer], add=False)
+    draw_tool = PointDrawTool(renderers=[vertex_handle_renderer], add=False)
     plot.add_tools(draw_tool)
     plot.toolbar.active_tap = draw_tool
 

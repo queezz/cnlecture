@@ -53,6 +53,8 @@ cp.domain_coloring(X, Y, f)
 | Primitive roots of unity | [PrimitiveRoots](https://github.com/queezz/cnlecture/blob/master/examples/PrimitiveRoots.ipynb) |
 | Modular surfaces \( \|w\| = \|z^n\| \) | [ModularSurface](https://github.com/queezz/cnlecture/blob/master/examples/ModularSurface.ipynb) |
 | Euler's formula (power series) | [EulersSpiral](examples/euler_spiral.md) |
+| Squares on quadrilateral sides | [Quadrilateral squares](examples/quadrilateral_squares.md) |
+| Two side squares and midpoint | [Triangle midpoint](examples/triangle_midpoint.md) |
 | Power series convergence | [PowerSeries](https://github.com/queezz/cnlecture/blob/master/examples/PowerSeries.ipynb) |
 | Interactive parameter demo | [interactive_demo](https://github.com/queezz/cnlecture/blob/master/examples/interactive_demo.ipynb) |
 

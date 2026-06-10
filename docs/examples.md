@@ -77,3 +77,12 @@ the complex identity \(A+iB=0\) for the segments connecting opposite square
 centers.
 
 See the interactive page: [Squares on the Sides of a Quadrilateral](examples/quadrilateral_squares.md).
+
+---
+
+## Triangle Side Squares and the Third-Side Midpoint
+
+Look at the two-side triangle piece separately: squares on \(2a\) and \(2b\),
+their centers \(p\) and \(s\), and the midpoint \(m=a+b\) of the third side.
+
+See the interactive page: [Triangle Side Squares and the Third-Side Midpoint](examples/triangle_midpoint.md).

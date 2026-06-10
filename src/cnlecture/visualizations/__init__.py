@@ -16,6 +16,15 @@ from cnlecture.visualizations.quadrilateral_squares import (
     square_centers,
     square_vertices,
 )
+from cnlecture.visualizations.triangle_midpoint import (
+    default_triangle_vertices,
+    export_triangle_midpoint_html,
+    make_triangle_midpoint_bokeh,
+    triangle_half_sides,
+    triangle_square_centers,
+    triangle_square_vertices,
+    triangle_third_side_midpoint,
+)
 
 __all__ = [
     "euler_series_terms",
@@ -30,4 +39,11 @@ __all__ = [
     "opposite_center_identity",
     "make_quadrilateral_squares_bokeh",
     "export_quadrilateral_squares_html",
+    "default_triangle_vertices",
+    "triangle_half_sides",
+    "triangle_square_vertices",
+    "triangle_square_centers",
+    "triangle_third_side_midpoint",
+    "make_triangle_midpoint_bokeh",
+    "export_triangle_midpoint_html",
 ]
