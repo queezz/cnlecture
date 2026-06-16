@@ -77,12 +77,14 @@ nav:
   - Examples:
       - Overview: examples.md
       - "Euler's Formula (power series)": examples/euler_spiral.md
+      - "Spiral velocity geometry": examples/spiral_velocity.md
       - "Squares on quadrilateral sides": examples/quadrilateral_squares.md
       - "Triangle side squares": examples/triangle_midpoint.md
   - API Reference:
       - functions: api/functions.md
       - cplotting: api/cplotting.md
       - "visualizations.euler": api/visualizations_euler.md
+      - "visualizations.spiral_velocity": api/visualizations_spiral_velocity.md
       - "visualizations.quadrilateral_squares": api/visualizations_quadrilateral_squares.md
       - "visualizations.triangle_midpoint": api/visualizations_triangle_midpoint.md
   - Known Issues: broken_or_pending.md

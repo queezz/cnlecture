@@ -16,6 +16,15 @@ from cnlecture.visualizations.quadrilateral_squares import (
     square_centers,
     square_vertices,
 )
+from cnlecture.visualizations.spiral_velocity import (
+    SpiralStepGeometry,
+    angle_between,
+    export_spiral_velocity_html,
+    make_spiral_velocity_bokeh,
+    spiral_curve,
+    spiral_point,
+    spiral_step_geometry,
+)
 from cnlecture.visualizations.triangle_midpoint import (
     default_triangle_vertices,
     export_triangle_midpoint_html,
@@ -39,6 +48,13 @@ __all__ = [
     "opposite_center_identity",
     "make_quadrilateral_squares_bokeh",
     "export_quadrilateral_squares_html",
+    "SpiralStepGeometry",
+    "spiral_point",
+    "spiral_curve",
+    "angle_between",
+    "spiral_step_geometry",
+    "make_spiral_velocity_bokeh",
+    "export_spiral_velocity_html",
     "default_triangle_vertices",
     "triangle_half_sides",
     "triangle_square_vertices",

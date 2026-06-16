@@ -86,3 +86,14 @@ Look at the two-side triangle piece separately: squares on \(2a\) and \(2b\),
 their centers \(p\) and \(s\), and the midpoint \(m=a+b\) of the third side.
 
 See the interactive page: [Triangle Side Squares and the Third-Side Midpoint](examples/triangle_midpoint.md).
+
+---
+
+## Spiral Velocity Geometry
+
+Compare the finite step \(M=Z(t+\delta)-Z(t)\) on
+\(Z(t)=e^{at}e^{ibt}\) with the infinitesimal right triangle
+\((a+ib)Z\delta\).  A \(\delta\) slider makes the failure and recovery of
+perpendicularity visible.
+
+See the interactive page: [Spiral Velocity Geometry](examples/spiral_velocity.md).
