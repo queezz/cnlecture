@@ -97,3 +97,13 @@ Compare the finite step \(M=Z(t+\delta)-Z(t)\) on
 perpendicularity visible.
 
 See the interactive page: [Spiral Velocity Geometry](examples/spiral_velocity.md).
+
+---
+
+## Cotes' Theorem and Roots of Unity
+
+Move \(P=x\) on the real axis while a regular \(n\)-gon supplies the roots of
+unity \(C_1,\ldots,C_n\).  The figure tracks Cotes' distance product
+\(PC_1PC_2\cdots PC_n=x^n-1\) and the corresponding real factor grouping.
+
+See the interactive page: [Cotes' Theorem and Roots of Unity](examples/cotes_theorem.md).

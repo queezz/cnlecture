@@ -1,5 +1,13 @@
 """Interactive visualisations for cnlecture."""
 
+from cnlecture.visualizations.cotes_theorem import (
+    cotes_distance_product,
+    cotes_distances,
+    cotes_quadratic_coefficients,
+    cotes_vertices,
+    export_cotes_theorem_html,
+    make_cotes_theorem_bokeh,
+)
 from cnlecture.visualizations.euler import (
     euler_series_points,
     euler_series_terms,
@@ -48,6 +56,12 @@ __all__ = [
     "opposite_center_identity",
     "make_quadrilateral_squares_bokeh",
     "export_quadrilateral_squares_html",
+    "cotes_vertices",
+    "cotes_distances",
+    "cotes_distance_product",
+    "cotes_quadratic_coefficients",
+    "make_cotes_theorem_bokeh",
+    "export_cotes_theorem_html",
     "SpiralStepGeometry",
     "spiral_point",
     "spiral_curve",
