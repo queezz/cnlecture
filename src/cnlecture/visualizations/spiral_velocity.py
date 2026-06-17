@@ -119,10 +119,10 @@ def spiral_step_geometry(
 
 
 def make_spiral_velocity_bokeh(
-    a: float = 0.18,
-    b: float = 1.0,
-    t: float = 1.25,
-    delta: float = 0.40,
+    a: float = 0.25,
+    b: float = 1.3,
+    t: float = 1.85,
+    delta: float = 0.2,
 ):
     """Build a Bokeh figure for the spiral velocity right-triangle argument."""
     try:
@@ -192,11 +192,12 @@ dashed lines/circles: rotation guides and infinitesimal model
         },
     )
 
+    overview_r = _overview_radius(sources)
     overview = figure(
         width=560,
         height=560,
-        x_range=Range1d(-2.3, 2.3, bounds=(-16.0, 16.0)),
-        y_range=Range1d(-2.3, 2.3, bounds=(-16.0, 16.0)),
+        x_range=Range1d(-overview_r, overview_r, bounds=(-16.0, 16.0)),
+        y_range=Range1d(-overview_r, overview_r, bounds=(-16.0, 16.0)),
         x_axis_label="Re",
         y_axis_label="Im",
         match_aspect=True,
@@ -270,9 +271,8 @@ dashed lines/circles: rotation guides and infinitesimal model
         ys="ys",
         source=overview_rotated_model,
         line_color="color",
-        line_dash="dashed",
         line_width=2.5,
-        alpha=0.65,
+        alpha=0.7,
     )
     overview.multi_line(
         xs="xs",
@@ -317,6 +317,7 @@ dashed lines/circles: rotation guides and infinitesimal model
         line_color=V_COLOR,
         line_width=4,
         line_alpha=0.95,
+        level="underlay",
     )
     overview.add_layout(velocity_arrow)
     velocity_label = Label(
@@ -344,11 +345,12 @@ dashed lines/circles: rotation guides and infinitesimal model
     )
     overview.add_layout(radius_label)
 
+    finite_x0, finite_x1, finite_y0, finite_y1 = _finite_view(sources, a, b)
     finite = figure(
         width=560,
         height=560,
-        x_range=Range1d(-0.35, 1.35, bounds=(-2.0, 2.0)),
-        y_range=Range1d(-0.35, 1.35, bounds=(-2.0, 2.0)),
+        x_range=Range1d(finite_x0, finite_x1, bounds=(-8.0, 8.0)),
+        y_range=Range1d(finite_y0, finite_y1, bounds=(-8.0, 8.0)),
         x_axis_label="radial component divided by |Z|δ",
         y_axis_label="turning component divided by |Z|δ",
         match_aspect=True,
@@ -412,6 +414,8 @@ dashed lines/circles: rotation guides and infinitesimal model
             radius_label=radius_label,
             x_range=overview.x_range,
             y_range=overview.y_range,
+            finite_x_range=finite.x_range,
+            finite_y_range=finite.y_range,
             finite_shade=finite_shade,
             finite_exact=finite_exact,
             finite_ideal=finite_ideal,
@@ -442,10 +446,10 @@ dashed lines/circles: rotation guides and infinitesimal model
 
 def export_spiral_velocity_html(
     path: str | Path = "docs/assets/plots/spiral_velocity.html",
-    a: float = 0.18,
-    b: float = 1.0,
-    t: float = 1.25,
-    delta: float = 0.40,
+    a: float = 0.25,
+    b: float = 1.3,
+    t: float = 1.85,
+    delta: float = 0.2,
 ) -> Path:
     """Write a standalone Bokeh HTML file for the spiral velocity example."""
     try:
@@ -526,6 +530,25 @@ M/(|Z|δ) -> a+ib<br>
 def _local(z: complex, p: complex, theta: float, scale: float = 1.0) -> complex:
     """Return point ``p`` in the local frame based at ``z`` and angle ``theta``."""
     return (p - z) * complex(math.cos(-theta), math.sin(-theta)) / scale
+
+
+def _overview_radius(sources: dict) -> float:
+    """Half-size of the origin-centred square view that frames the overview."""
+    xs = list(sources["overview_points"]["x"]) + [sources["overview_velocity"]["x_end"][0]]
+    ys = list(sources["overview_points"]["y"]) + [sources["overview_velocity"]["y_end"][0]]
+    max_r = max([1.05, *(math.hypot(x, y) for x, y in zip(xs, ys))])
+    return max(1.3, 1.18 * max_r)
+
+
+def _finite_view(sources: dict, a: float, b: float) -> tuple[float, float, float, float]:
+    """Right-biased square view ``(x0, x1, y0, y1)`` framing the zoom triangle."""
+    xs = [*sources["finite_points"]["x"], 0.0, a, a]
+    ys = [*sources["finite_points"]["y"], 0.0, 0.0, b]
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+    cx, cy = 0.5 * (min_x + max_x), 0.5 * (min_y + max_y)
+    half = max(0.4, 0.5 * max(max_x - min_x, max_y - min_y) * 1.22)
+    return (cx - 1.5 * half, cx + 0.5 * half, cy - half, cy + half)
 
 
 def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict[str, list]]:
@@ -647,7 +670,7 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
                 unit_point.imag,
             ],
             "color": [POINT_COLOR, POINT_COLOR, A_COLOR, M_COLOR, M_COLOR, M_COLOR, POINT_COLOR],
-            "size": [7, 9, 8, 9, 8, 8, 6],
+            "size": [5, 6, 5, 6, 5, 5, 5],
         },
         "overview_labels": {
             "x": [
@@ -710,7 +733,7 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
             "x": [local_origin.real, local_radial.real, local_next.real, local_ideal.real],
             "y": [local_origin.imag, local_radial.imag, local_next.imag, local_ideal.imag],
             "color": [POINT_COLOR, A_COLOR, M_COLOR, M_COLOR],
-            "size": [9, 9, 9, 8],
+            "size": [6, 6, 6, 5],
         },
         "finite_labels": {
             "x": [
@@ -887,7 +910,7 @@ overview_points.data = {
   x: [0, z.re, radialPoint.re, zNext.re, modelM.re, rotatedM.re, 1],
   y: [0, z.im, radialPoint.im, zNext.im, modelM.im, rotatedM.im, 0],
   color: [POINT_COLOR, POINT_COLOR, A_COLOR, M_COLOR, M_COLOR, M_COLOR, POINT_COLOR],
-  size: [7, 9, 8, 9, 8, 8, 6],
+  size: [5, 6, 5, 6, 5, 5, 5],
 };
 overview_labels.data = {
   x: [
@@ -942,7 +965,7 @@ finite_points.data = {
   x: [localOrigin.re, localRadial.re, localNext.re, localIdeal.re],
   y: [localOrigin.im, localRadial.im, localNext.im, localIdeal.im],
   color: [POINT_COLOR, A_COLOR, M_COLOR, M_COLOR],
-  size: [9, 9, 9, 8],
+  size: [6, 6, 6, 5],
 };
 finite_labels.data = {
   x: [
@@ -1014,4 +1037,17 @@ for (let k = 0; k < fitX.length; k += 1) {
 const R = Math.max(1.3, 1.18 * maxr);
 x_range.setv({ start: -R, end: R });
 y_range.setv({ start: -R, end: R });
+
+// auto-fit the zoom panel, biased so the triangle sits right of centre
+const f2x = [localOrigin.re, localRadial.re, localNext.re, localIdeal.re, 0, a, a];
+const f2y = [localOrigin.im, localRadial.im, localNext.im, localIdeal.im, 0, 0, b];
+const f2minx = Math.min(...f2x);
+const f2maxx = Math.max(...f2x);
+const f2miny = Math.min(...f2y);
+const f2maxy = Math.max(...f2y);
+const f2cx = 0.5 * (f2minx + f2maxx);
+const f2cy = 0.5 * (f2miny + f2maxy);
+const f2half = Math.max(0.4, 0.5 * Math.max(f2maxx - f2minx, f2maxy - f2miny) * 1.22);
+finite_x_range.setv({ start: f2cx - 1.5 * f2half, end: f2cx + 0.5 * f2half });
+finite_y_range.setv({ start: f2cy - f2half, end: f2cy + f2half });
 """
