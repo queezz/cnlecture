@@ -25,6 +25,15 @@ COMPONENT_COLORS = [A_COLOR, B_COLOR, M_COLOR]
 # Radius of the small ``bδ`` angle arc drawn at the origin inset.
 BDELTA_ARC_RADIUS = 0.34
 
+# Continue the plotted spiral a little past ``Z(t+δ)``.
+SPIRAL_EXTRA_ANGLE = math.pi / 12
+
+# Padding around the overview geometry used for panel 1 auto-fit.
+OVERVIEW_FIT_PADDING = 1.0
+
+# Positive values move the panel-1 view center upward, placing the origin lower.
+OVERVIEW_VERTICAL_BIAS = 0.18
+
 
 @dataclass(frozen=True)
 class SpiralStepGeometry:
@@ -119,8 +128,8 @@ def spiral_step_geometry(
 
 
 def make_spiral_velocity_bokeh(
-    a: float = 0.25,
-    b: float = 1.3,
+    a: float = 0.4,
+    b: float = 0.95,
     t: float = 1.85,
     delta: float = 0.2,
 ):
@@ -129,6 +138,7 @@ def make_spiral_velocity_bokeh(
         from bokeh.layouts import column, row
         from bokeh.models import (
             Arrow,
+            Checkbox,
             ColumnDataSource,
             CustomJS,
             Div,
@@ -147,7 +157,8 @@ def make_spiral_velocity_bokeh(
         ) from exc
 
     sources = _bokeh_sources(a, b, t, delta)
-    curve = spiral_curve(a, b, t_min=-5.5)
+    t_start, t_end = _spiral_plot_window(b, t, delta)
+    curve = spiral_curve(a, b, t_min=t_start, t_max=t_end)
     unit = np.exp(1j * np.linspace(0, 2 * math.pi, 240))
 
     curve_source = ColumnDataSource(data=dict(x=curve.real.tolist(), y=curve.imag.tolist()))
@@ -192,12 +203,12 @@ dashed lines/circles: rotation guides and infinitesimal model
         },
     )
 
-    overview_r = _overview_radius(sources)
+    overview_x0, overview_x1, overview_y0, overview_y1 = _overview_view(sources)
     overview = figure(
         width=560,
         height=560,
-        x_range=Range1d(-overview_r, overview_r, bounds=(-16.0, 16.0)),
-        y_range=Range1d(-overview_r, overview_r, bounds=(-16.0, 16.0)),
+        x_range=Range1d(overview_x0, overview_x1, bounds=(-16.0, 16.0)),
+        y_range=Range1d(overview_y0, overview_y1, bounds=(-16.0, 16.0)),
         x_axis_label="Re",
         y_axis_label="Im",
         match_aspect=True,
@@ -279,7 +290,6 @@ dashed lines/circles: rotation guides and infinitesimal model
         ys="ys",
         source=overview_b_chord,
         line_color="color",
-        line_dash="dashed",
         line_width=2.5,
         alpha=0.7,
     )
@@ -288,7 +298,7 @@ dashed lines/circles: rotation guides and infinitesimal model
         ys="ys",
         source=overview_step,
         line_color="color",
-        line_width=5,
+        line_width=2.5,
         alpha=0.95,
     )
     overview.scatter(x="x", y="y", source=overview_points, size="size", color="color", alpha=0.96)
@@ -391,12 +401,14 @@ dashed lines/circles: rotation guides and infinitesimal model
     b_slider = Slider(title="b  (angular speed)", start=0.3, end=1.8, step=0.05, value=b, width=360)
     t_slider = Slider(title="t  (point on spiral)", start=0.2, end=2.6, step=0.05, value=t, width=360)
     delta_slider = Slider(title="δ  (finite step)", start=0.02, end=1.2, step=0.02, value=delta, width=360)
+    autofit_checkbox = Checkbox(label="Auto-fit panel 1", active=True, width=360)
     callback = CustomJS(
         args=dict(
             a_slider=a_slider,
             b_slider=b_slider,
             t_slider=t_slider,
             delta_slider=delta_slider,
+            autofit_checkbox=autofit_checkbox,
             curve_source=curve_source,
             overview_guides=overview_guides,
             overview_local_shade=overview_local_shade,
@@ -425,6 +437,9 @@ dashed lines/circles: rotation guides and infinitesimal model
         ),
         code=(
             _BOKEH_UPDATE_JS.replace("__BDELTA_ARC_RADIUS__", repr(BDELTA_ARC_RADIUS))
+            .replace("__SPIRAL_EXTRA_ANGLE__", repr(SPIRAL_EXTRA_ANGLE))
+            .replace("__OVERVIEW_FIT_PADDING__", repr(OVERVIEW_FIT_PADDING))
+            .replace("__OVERVIEW_VERTICAL_BIAS__", repr(OVERVIEW_VERTICAL_BIAS))
             .replace("__GUIDE_COLOR__", GUIDE_COLOR)
             .replace("__UNIT_COLOR__", UNIT_COLOR)
             .replace("__POINT_COLOR__", POINT_COLOR)
@@ -435,19 +450,20 @@ dashed lines/circles: rotation guides and infinitesimal model
     )
     for control in (a_slider, b_slider, t_slider, delta_slider):
         control.js_on_change("value", callback)
+    autofit_checkbox.js_on_change("active", callback)
 
-    controls = column(a_slider, b_slider, t_slider, delta_slider, width=380)
+    controls = column(a_slider, b_slider, t_slider, delta_slider, autofit_checkbox, width=380)
     return column(
         row(overview, finite),
-        row(controls, column(summary, legend, width=380)),
+        row(controls, row(summary, legend)),
         sizing_mode="stretch_width",
     )
 
 
 def export_spiral_velocity_html(
     path: str | Path = "docs/assets/plots/spiral_velocity.html",
-    a: float = 0.25,
-    b: float = 1.3,
+    a: float = 0.4,
+    b: float = 0.95,
     t: float = 1.85,
     delta: float = 0.2,
 ) -> Path:
@@ -534,10 +550,28 @@ def _local(z: complex, p: complex, theta: float, scale: float = 1.0) -> complex:
 
 def _overview_radius(sources: dict) -> float:
     """Half-size of the origin-centred square view that frames the overview."""
-    xs = list(sources["overview_points"]["x"]) + [sources["overview_velocity"]["x_end"][0]]
-    ys = list(sources["overview_points"]["y"]) + [sources["overview_velocity"]["y_end"][0]]
+    xs = sources["overview_fit"]["x"]
+    ys = sources["overview_fit"]["y"]
     max_r = max([1.05, *(math.hypot(x, y) for x, y in zip(xs, ys))])
-    return max(1.3, 1.18 * max_r)
+    return max(1.3, OVERVIEW_FIT_PADDING * max_r)
+
+
+def _overview_view(sources: dict) -> tuple[float, float, float, float]:
+    """Square panel-1 view, shifted upward when the fitted geometry allows it."""
+    ys = sources["overview_fit"]["y"]
+    radius = _overview_radius(sources)
+    desired_center_y = OVERVIEW_VERTICAL_BIAS * radius
+    min_center_y = max(ys) - radius
+    max_center_y = min(ys) + radius
+    center_y = min(max(desired_center_y, min_center_y), max_center_y)
+    return -radius, radius, center_y - radius, center_y + radius
+
+
+def _spiral_plot_window(b: float, t: float, delta: float) -> tuple[float, float]:
+    """Return the ``t`` interval for the overview spiral segment."""
+    angular_speed = max(abs(b), 1e-6)
+    period = 2 * math.pi / angular_speed
+    return t - 2.5 * period, t + delta + SPIRAL_EXTRA_ANGLE / angular_speed
 
 
 def _finite_view(sources: dict, a: float, b: float) -> tuple[float, float, float, float]:
@@ -579,6 +613,8 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
 
     v_vec = complex(a, b) * z
     v_end = z + v_vec
+    _, spiral_t_end = _spiral_plot_window(b, t, delta)
+    spiral_end = spiral_point(a, b, spiral_t_end)
     bdelta_arc = BDELTA_ARC_RADIUS * np.exp(1j * np.linspace(theta, next_theta, 40))
     bdelta_mid = 0.5 * (theta + next_theta)
     bdelta_label = (BDELTA_ARC_RADIUS + 0.13) * complex(
@@ -670,7 +706,7 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
                 unit_point.imag,
             ],
             "color": [POINT_COLOR, POINT_COLOR, A_COLOR, M_COLOR, M_COLOR, M_COLOR, POINT_COLOR],
-            "size": [5, 6, 5, 6, 5, 5, 5],
+            "size": [5, 5, 5, 5, 5, 5, 5],
         },
         "overview_labels": {
             "x": [
@@ -702,6 +738,28 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
             "y_start": [z.imag],
             "x_end": [v_end.real],
             "y_end": [v_end.imag],
+        },
+        "overview_fit": {
+            "x": [
+                0.0,
+                z.real,
+                radial_point.real,
+                z_next.real,
+                model_m.real,
+                rotated_m.real,
+                unit_point.real,
+                spiral_end.real,
+            ],
+            "y": [
+                0.0,
+                z.imag,
+                radial_point.imag,
+                z_next.imag,
+                model_m.imag,
+                rotated_m.imag,
+                unit_point.imag,
+                spiral_end.imag,
+            ],
         },
         "overview_bdelta_arc": {
             "x": bdelta_arc.real.tolist(),
@@ -762,7 +820,11 @@ const a = a_slider.value;
 const b = b_slider.value;
 const t = t_slider.value;
 const delta = delta_slider.value;
+const autofitPanel1 = autofit_checkbox.active;
 const ARC_RADIUS = __BDELTA_ARC_RADIUS__;
+const SPIRAL_EXTRA_ANGLE = __SPIRAL_EXTRA_ANGLE__;
+const OVERVIEW_FIT_PADDING = __OVERVIEW_FIT_PADDING__;
+const OVERVIEW_VERTICAL_BIAS = __OVERVIEW_VERTICAL_BIAS__;
 const GUIDE_COLOR = "__GUIDE_COLOR__";
 const UNIT_COLOR = "__UNIT_COLOR__";
 const POINT_COLOR = "__POINT_COLOR__";
@@ -910,7 +972,7 @@ overview_points.data = {
   x: [0, z.re, radialPoint.re, zNext.re, modelM.re, rotatedM.re, 1],
   y: [0, z.im, radialPoint.im, zNext.im, modelM.im, rotatedM.im, 0],
   color: [POINT_COLOR, POINT_COLOR, A_COLOR, M_COLOR, M_COLOR, M_COLOR, POINT_COLOR],
-  size: [5, 6, 5, 6, 5, 5, 5],
+  size: [5, 5, 5, 5, 5, 5, 5],
 };
 overview_labels.data = {
   x: [
@@ -1016,7 +1078,7 @@ radius_label.y = 0.5 * z.im;
 
 const period = 2 * Math.PI / Math.max(Math.abs(b), 1e-6);
 const tStart = t - 2.5 * period;
-const tEnd = t + delta + 0.6 * period;
+const tEnd = t + delta + SPIRAL_EXTRA_ANGLE / Math.max(Math.abs(b), 1e-6);
 const NS = 600;
 const curveX = [];
 const curveY = [];
@@ -1027,16 +1089,23 @@ for (let k = 0; k < NS; k += 1) {
   curveY.push(p.im);
 }
 curve_source.data = { x: curveX, y: curveY };
+const spiralEnd = expPoint(Math.exp(a * tEnd), b * tEnd);
 
-const fitX = [0, z.re, zNext.re, radialPoint.re, vEnd.re, rotatedM.re, modelM.re, 1];
-const fitY = [0, z.im, zNext.im, radialPoint.im, vEnd.im, rotatedM.im, modelM.im, 0];
+const fitX = [0, z.re, zNext.re, radialPoint.re, rotatedM.re, modelM.re, 1, spiralEnd.re];
+const fitY = [0, z.im, zNext.im, radialPoint.im, rotatedM.im, modelM.im, 0, spiralEnd.im];
 let maxr = 1.05;
 for (let k = 0; k < fitX.length; k += 1) {
   maxr = Math.max(maxr, Math.hypot(fitX[k], fitY[k]));
 }
-const R = Math.max(1.3, 1.18 * maxr);
-x_range.setv({ start: -R, end: R });
-y_range.setv({ start: -R, end: R });
+const R = Math.max(1.3, OVERVIEW_FIT_PADDING * maxr);
+const desiredCenterY = OVERVIEW_VERTICAL_BIAS * R;
+const minCenterY = Math.max(...fitY) - R;
+const maxCenterY = Math.min(...fitY) + R;
+const centerY = Math.min(Math.max(desiredCenterY, minCenterY), maxCenterY);
+if (autofitPanel1) {
+  x_range.setv({ start: -R, end: R });
+  y_range.setv({ start: centerY - R, end: centerY + R });
+}
 
 // auto-fit the zoom panel, biased so the triangle sits right of centre
 const f2x = [localOrigin.re, localRadial.re, localNext.re, localIdeal.re, 0, a, a];

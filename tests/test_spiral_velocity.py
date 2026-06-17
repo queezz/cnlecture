@@ -8,7 +8,11 @@ from cnlecture.visualizations.spiral_velocity import (
     BDELTA_ARC_RADIUS,
     COMPONENT_COLORS,
     M_COLOR,
+    SPIRAL_EXTRA_ANGLE,
     _bokeh_sources,
+    _overview_radius,
+    _overview_view,
+    _spiral_plot_window,
     angle_between,
     spiral_curve,
     spiral_point,
@@ -32,6 +36,16 @@ def test_spiral_curve_shape():
 def test_spiral_curve_requires_two_points():
     with pytest.raises(ValueError, match="at least 2"):
         spiral_curve(n_points=1)
+
+
+def test_spiral_plot_window_ends_just_past_next_point():
+    b = 1.3
+    t = 1.85
+    delta = 0.2
+
+    _, t_end = _spiral_plot_window(b=b, t=t, delta=delta)
+
+    assert b * (t_end - (t + delta)) == pytest.approx(SPIRAL_EXTRA_ANGLE)
 
 
 def test_angle_between_complex_vectors():
@@ -171,6 +185,25 @@ def test_overview_velocity_is_a_plus_ib_times_z():
     assert velocity["y_end"][0] == pytest.approx(z.imag + v_vec.imag)
 
 
+def test_overview_autozoom_ignores_velocity_endpoint():
+    sources = _bokeh_sources(a=0.18, b=1.0, t=1.25, delta=0.4)
+    radius = _overview_radius(sources)
+
+    sources["overview_velocity"]["x_end"][0] = 1000.0
+    sources["overview_velocity"]["y_end"][0] = -1000.0
+
+    assert _overview_radius(sources) == pytest.approx(radius)
+
+
+def test_overview_view_bias_keeps_fit_points_visible():
+    sources = _bokeh_sources(a=0.4, b=0.95, t=1.85, delta=0.2)
+    x0, x1, y0, y1 = _overview_view(sources)
+
+    assert (y0 + y1) / 2 > 0.0
+    assert all(x0 <= x <= x1 for x in sources["overview_fit"]["x"])
+    assert all(y0 <= y <= y1 for y in sources["overview_fit"]["y"])
+
+
 def test_overview_bdelta_arc_spans_the_angular_step():
     a, b, t, delta = 0.18, 1.0, 1.25, 0.4
     sources = _bokeh_sources(a=a, b=b, t=t, delta=delta)
@@ -199,11 +232,13 @@ def test_overview_marks_unit_point_and_bdelta_label():
 
 def test_layout_exposes_abt_delta_sliders():
     pytest.importorskip("bokeh")
-    from bokeh.models import Slider
+    from bokeh.models import Checkbox, Slider
 
     from cnlecture.visualizations.spiral_velocity import make_spiral_velocity_bokeh
 
     layout = make_spiral_velocity_bokeh()
-    titles = [m.title for m in layout.references() if isinstance(m, Slider)]
+    sliders = {m.title.split()[0]: m.value for m in layout.references() if isinstance(m, Slider)}
+    checkboxes = {m.label: m.active for m in layout.references() if isinstance(m, Checkbox)}
 
-    assert sorted(title.split()[0] for title in titles) == ["a", "b", "t", "δ"]
+    assert sliders == {"a": 0.4, "b": 0.95, "t": 1.85, "δ": 0.2}
+    assert checkboxes == {"Auto-fit panel 1": True}
