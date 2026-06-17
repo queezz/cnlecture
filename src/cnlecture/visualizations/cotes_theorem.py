@@ -64,7 +64,10 @@ def cotes_quadratic_coefficients(n: int) -> list[float]:
     return [-2 * math.cos(2 * math.pi * k / n) for k in range(1, (n + 1) // 2)]
 
 
-def make_cotes_theorem_bokeh(n: int = 5, x: float = 1.65):
+PRODUCT_VECTOR_MAX = 1.75
+
+
+def make_cotes_theorem_bokeh(n: int = 5, x: float = 1.65, y: float = 0.45):
     """Build a Bokeh visualization of Cotes' distance-product theorem."""
     try:
         from bokeh.layouts import column, row
@@ -73,7 +76,6 @@ def make_cotes_theorem_bokeh(n: int = 5, x: float = 1.65):
             ColumnDataSource,
             CustomJS,
             Div,
-            Label,
             LabelSet,
             Range1d,
             Slider,
@@ -100,10 +102,13 @@ def make_cotes_theorem_bokeh(n: int = 5, x: float = 1.65):
     vertex_label_source = ColumnDataSource(data=sources["vertex_labels"])
     point_source = ColumnDataSource(data=sources["point"])
     center_source = ColumnDataSource(data=dict(x=[0.0], y=[0.0], label=["O"]))
-    un_sources = _un_bokeh_sources(n, x)
-    un_curve_source = ColumnDataSource(data=un_sources["curve"])
-    un_point_source = ColumnDataSource(data=un_sources["point"])
-    un_guides_source = ColumnDataSource(data=un_sources["guides"])
+    product_sources = _product_bokeh_sources(n, x, y)
+    product_factor_source = ColumnDataSource(data=product_sources["factors"])
+    product_root_source = ColumnDataSource(data=product_sources["roots"])
+    product_root_label_source = ColumnDataSource(data=product_sources["root_labels"])
+    product_z_source = ColumnDataSource(data=product_sources["z"])
+    product_arrow_source = ColumnDataSource(data=product_sources["product_arrow"])
+    product_point_source = ColumnDataSource(data=product_sources["product_point"])
 
     summary = Div(
         text=_format_summary(n, x),
@@ -129,6 +134,19 @@ def make_cotes_theorem_bokeh(n: int = 5, x: float = 1.65):
             "border-radius": "6px",
             "padding": "12px",
             "background": "#fffdf7",
+        },
+    )
+    product_summary = Div(
+        text=_format_product_summary(n, x, y),
+        width=390,
+        styles={
+            "font-family": "JetBrains Mono, Menlo, Consolas, monospace",
+            "font-size": "13px",
+            "line-height": "1.55",
+            "border": "1px solid #d8dee9",
+            "border-radius": "6px",
+            "padding": "12px",
+            "background": "#f8fbff",
         },
     )
 
@@ -230,89 +248,162 @@ def make_cotes_theorem_bokeh(n: int = 5, x: float = 1.65):
         )
     )
 
-    un_plot = figure(
-        width=520,
-        height=520,
-        x_range=Range1d(1.0, 2.4, bounds=(1.0, 2.4)),
-        y_range=Range1d(0.0, _un_y_end(n), bounds=(0.0, _un_y_end(12))),
-        x_axis_label="x",
-        y_axis_label="U_n(x)",
+    product_plot = figure(
+        width=560,
+        height=560,
+        x_range=Range1d(-2.4, 2.8, bounds=(-4.0, 4.0)),
+        y_range=Range1d(-2.6, 2.6, bounds=(-4.0, 4.0)),
+        x_axis_label="Re",
+        y_axis_label="Im",
+        match_aspect=True,
         tools="pan,wheel_zoom,reset,save",
         toolbar_location="above",
-        title="Polynomial value:  U_n(x) = x^n - 1",
+        title="Complex product:  U_n(z) = (z-C_1)...(z-C_n)",
     )
-    un_plot.grid.grid_line_alpha = 0.28
-    un_plot.xaxis.axis_label_text_font_style = "normal"
-    un_plot.yaxis.axis_label_text_font_style = "normal"
-    un_plot.line(
+    product_plot.grid.grid_line_alpha = 0.28
+    product_plot.xaxis.axis_label_text_font_style = "normal"
+    product_plot.yaxis.axis_label_text_font_style = "normal"
+    product_plot.line(
         x="x",
         y="y",
-        source=un_curve_source,
-        line_color="#0072b2",
-        line_width=3,
-    )
-    un_plot.multi_line(
-        xs="xs",
-        ys="ys",
-        source=un_guides_source,
+        source=circle_source,
         line_color="#6b7280",
         line_width=1.5,
         line_dash="dashed",
+        alpha=0.8,
     )
-    un_plot.scatter(
+    product_plot.line(
         x="x",
         y="y",
-        source=un_point_source,
-        size=12,
+        source=axis_source,
+        line_color="#374151",
+        line_width=1.3,
+    )
+    product_plot.multi_line(
+        xs="xs",
+        ys="ys",
+        source=product_factor_source,
+        line_color="color",
+        line_width="width",
+        line_alpha="alpha",
+    )
+    product_plot.line(
+        x="x",
+        y="y",
+        source=product_arrow_source,
+        line_color="#cc79a7",
+        line_width=3,
+    )
+    product_plot.scatter(
+        x="x",
+        y="y",
+        source=product_root_source,
+        size=11,
+        fill_color="#ffffff",
+        line_color="#111827",
+        line_width=1.6,
+    )
+    product_plot.scatter(
+        x="x",
+        y="y",
+        source=center_source,
+        size=9,
+        color="#111827",
+    )
+    product_plot.scatter(
+        x="x",
+        y="y",
+        source=product_z_source,
+        size=13,
         fill_color="#ffffff",
         line_color="#b45309",
         line_width=2,
     )
-    un_label = Label(
-        x=x,
-        y=x**n - 1,
-        text=_format_un_label(n, x),
-        x_offset=8,
-        y_offset=8,
-        text_font_size="12px",
-        text_color="#92400e",
+    product_plot.scatter(
+        x="x",
+        y="y",
+        source=product_point_source,
+        size=11,
+        fill_color="#ffffff",
+        line_color="#cc79a7",
+        line_width=2,
     )
-    un_plot.add_layout(un_label)
+    product_plot.add_layout(
+        LabelSet(
+            x="x",
+            y="y",
+            text="label",
+            source=product_root_label_source,
+            x_offset=3,
+            y_offset=3,
+            text_font_size="12px",
+            text_color="#111827",
+        )
+    )
+    product_plot.add_layout(
+        LabelSet(
+            x="x",
+            y="y",
+            text="label",
+            source=product_z_source,
+            x_offset=8,
+            y_offset=6,
+            text_font_size="15px",
+            text_color="#92400e",
+        )
+    )
+    product_plot.add_layout(
+        LabelSet(
+            x="x",
+            y="y",
+            text="label",
+            source=product_point_source,
+            x_offset=8,
+            y_offset=6,
+            text_font_size="12px",
+            text_color="#9f2f75",
+        )
+    )
 
     n_slider = Slider(title="n  (number of vertices)", start=2, end=12, step=1, value=n, width=360)
     x_slider = Slider(title="x  (distance OP)", start=1.05, end=2.4, step=0.01, value=x, width=360)
-    show_un_checkbox = Checkbox(label="Show U_n(x) panel", active=True, width=360)
+    y_slider = Slider(title="Im(z)  (product panel)", start=-1.2, end=1.2, step=0.02, value=y, width=360)
+    show_product_checkbox = Checkbox(label="Show complex product panel", active=True, width=360)
     callback = CustomJS(
         args=dict(
             n_slider=n_slider,
             x_slider=x_slider,
+            y_slider=y_slider,
             axis_source=axis_source,
             polygon_source=polygon_source,
             ray_source=ray_source,
             vertex_source=vertex_source,
             vertex_label_source=vertex_label_source,
             point_source=point_source,
-            un_curve_source=un_curve_source,
-            un_point_source=un_point_source,
-            un_guides_source=un_guides_source,
-            un_plot=un_plot,
-            un_label=un_label,
+            product_factor_source=product_factor_source,
+            product_root_source=product_root_source,
+            product_root_label_source=product_root_label_source,
+            product_z_source=product_z_source,
+            product_arrow_source=product_arrow_source,
+            product_point_source=product_point_source,
+            product_plot=product_plot,
             summary=summary,
             factorization=factorization,
+            product_summary=product_summary,
             x_range=plot.x_range,
-            un_y_range=un_plot.y_range,
-            show_un_checkbox=show_un_checkbox,
+            show_product_checkbox=show_product_checkbox,
         ),
         code=_BOKEH_UPDATE_JS,
     )
     n_slider.js_on_change("value", callback)
     x_slider.js_on_change("value", callback)
-    show_un_checkbox.js_on_change("active", callback)
+    y_slider.js_on_change("value", callback)
+    show_product_checkbox.js_on_change("active", callback)
 
-    controls = column(n_slider, x_slider, show_un_checkbox, width=380)
+    controls = column(n_slider, x_slider, y_slider, show_product_checkbox, width=380)
     return column(
-        row(plot, un_plot),
-        row(controls, summary, factorization),
+        row(plot, product_plot),
+        row(controls, summary, product_summary, factorization),
         sizing_mode="stretch_width",
     )
 
@@ -321,6 +412,7 @@ def export_cotes_theorem_html(
     path: str | Path = "docs/assets/plots/cotes_theorem.html",
     n: int = 5,
     x: float = 1.65,
+    y: float = 0.45,
 ) -> Path:
     """Write a standalone Bokeh HTML file for the Cotes theorem example."""
     try:
@@ -335,7 +427,7 @@ def export_cotes_theorem_html(
     out = Path(path).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
     save(
-        make_cotes_theorem_bokeh(n=n, x=x),
+        make_cotes_theorem_bokeh(n=n, x=x, y=y),
         filename=str(out),
         resources=INLINE,
         title="Cotes' theorem distance product",
@@ -383,30 +475,60 @@ def _bokeh_sources(n: int, x: float) -> dict[str, dict[str, list]]:
     }
 
 
-def _un_bokeh_sources(n: int, x: float) -> dict[str, dict[str, list]]:
+def _product_bokeh_sources(n: int, x: float, y: float) -> dict[str, dict[str, list]]:
     n = _validate_n(n)
     x = float(x)
-    domain = np.linspace(1.0, 2.4, 240)
-    curve = domain**n - 1
-    value = x**n - 1
+    y = float(y)
+    vertices = cotes_vertices(n)
+    z = complex(x, y)
+    product = z**n - 1
+    scale = _product_display_scale(product)
+    shown_product = scale * product
     return {
-        "curve": {
-            "x": [float(t) for t in domain],
-            "y": [float(y) for y in curve],
+        "factors": {
+            "xs": [[root.real, z.real] for root in vertices],
+            "ys": [[root.imag, z.imag] for root in vertices],
+            "color": ["#0072b2"] + ["#9ca3af"] * (n - 1),
+            "width": [3.0] + [1.4] * (n - 1),
+            "alpha": [0.95] + [0.68] * (n - 1),
         },
-        "point": {
-            "x": [x],
-            "y": [value],
+        "roots": {
+            "x": [root.real for root in vertices],
+            "y": [root.imag for root in vertices],
         },
-        "guides": {
-            "xs": [[x, x], [1.0, x]],
-            "ys": [[0.0, value], [value, value]],
+        "root_labels": {
+            "x": [1.1 * root.real for root in vertices],
+            "y": [1.1 * root.imag for root in vertices],
+            "label": [f"C{i}" for i in range(1, n + 1)],
+        },
+        "z": {
+            "x": [z.real],
+            "y": [z.imag],
+            "label": ["z"],
+        },
+        "product_arrow": {
+            "x": [0.0, shown_product.real],
+            "y": [0.0, shown_product.imag],
+        },
+        "product_point": {
+            "x": [shown_product.real],
+            "y": [shown_product.imag],
+            "label": [_product_point_label(scale)],
         },
     }
 
 
-def _un_y_end(n: int) -> float:
-    return 1.08 * (2.4 ** _validate_n(n) - 1)
+def _product_display_scale(product: complex) -> float:
+    magnitude = abs(product)
+    if magnitude <= PRODUCT_VECTOR_MAX or magnitude == 0:
+        return 1.0
+    return PRODUCT_VECTOR_MAX / magnitude
+
+
+def _product_point_label(scale: float) -> str:
+    if math.isclose(scale, 1.0):
+        return "U_n(z)"
+    return f"{scale:.2g} U_n(z)"
 
 
 def _format_number(value: float) -> str:
@@ -456,14 +578,41 @@ Each conjugate pair gives<br>
 """
 
 
-def _format_un_label(n: int, x: float) -> str:
-    return f"U_{n}({x:.2f}) = {_format_number(x**n - 1)}"
+def _format_complex(z: complex) -> str:
+    sign = "+" if z.imag >= 0 else "-"
+    return f"{_format_number(z.real)} {sign} {_format_number(abs(z.imag))}i"
+
+
+def _format_angle_radians(angle: float) -> str:
+    return f"{angle:.3f}"
+
+
+def _format_product_summary(n: int, x: float, y: float) -> str:
+    roots = cotes_vertices(n)
+    z = complex(x, y)
+    factors = z - roots
+    product = z**n - 1
+    radius_product = float(np.prod(np.abs(factors)))
+    angle_sum = float(np.sum(np.angle(factors)))
+    scale = _product_display_scale(product)
+    scale_note = "unscaled" if math.isclose(scale, 1.0) else f"shown at {scale:.3g}x"
+    return f"""
+<b>Complex product</b><br>
+z = {_format_complex(z)}<br>
+&prod;(z - C<sub>k</sub>) = {_format_complex(product)}<br>
+z<sup>{n}</sup> - 1 = {_format_complex(product)}<br>
+R<sub>1</sub>...R<sub>{n}</sub> = {_format_number(radius_product)}<br>
+arg sum = {_format_angle_radians(angle_sum)} rad<br>
+product arrow: {scale_note}
+"""
 
 
 _BOKEH_UPDATE_JS = r"""
 const n = Math.round(n_slider.value);
 const x = x_slider.value;
+const y = y_slider.value;
 const twoPi = 2 * Math.PI;
+const PRODUCT_VECTOR_MAX = 1.75;
 
 function fmt(value) {
   if (Math.abs(value) >= 10000) {
@@ -475,6 +624,45 @@ function fmt(value) {
 function fmtSigned(value) {
   const sign = value >= 0 ? "+" : "-";
   return `${sign} ${fmt(Math.abs(value))}`;
+}
+function c(re, im) {
+  return {re: re, im: im};
+}
+function sub(u, v) {
+  return c(u.re - v.re, u.im - v.im);
+}
+function mul(u, v) {
+  return c(u.re * v.re - u.im * v.im, u.re * v.im + u.im * v.re);
+}
+function powInt(u, power) {
+  let result = c(1, 0);
+  for (let i = 0; i < power; i += 1) {
+    result = mul(result, u);
+  }
+  return result;
+}
+function absC(u) {
+  return Math.hypot(u.re, u.im);
+}
+function argC(u) {
+  return Math.atan2(u.im, u.re);
+}
+function fmtComplex(u) {
+  const sign = u.im >= 0 ? " + " : " - ";
+  return `${fmt(u.re)}${sign}${fmt(Math.abs(u.im))}i`;
+}
+function productScale(u) {
+  const magnitude = absC(u);
+  if (magnitude <= PRODUCT_VECTOR_MAX || magnitude === 0) {
+    return 1;
+  }
+  return PRODUCT_VECTOR_MAX / magnitude;
+}
+function productLabel(scale) {
+  if (Math.abs(scale - 1) < 1e-12) {
+    return "U_n(z)";
+  }
+  return `${scale.toPrecision(2)} U_n(z)`;
 }
 
 const vertices = [];
@@ -544,22 +732,66 @@ Each conjugate pair gives<br>
 
 x_range.end = Math.max(2.65, x + 0.25);
 
-const curveX = [];
-const curveY = [];
-for (let i = 0; i < 240; i += 1) {
-  const t = 1 + (2.4 - 1) * i / 239;
-  curveX.push(t);
-  curveY.push(Math.pow(t, n) - 1);
+const z = c(x, y);
+const factorXs = [];
+const factorYs = [];
+const factorAngles = [];
+let radiusProduct = 1;
+let complexProduct = c(1, 0);
+for (const root of vertices) {
+  const factor = sub(z, root);
+  factorXs.push([root.re, z.re]);
+  factorYs.push([root.im, z.im]);
+  factorAngles.push(argC(factor));
+  radiusProduct *= absC(factor);
+  complexProduct = mul(complexProduct, factor);
 }
-un_curve_source.data = {x: curveX, y: curveY};
-un_point_source.data = {x: [x], y: [polynomial]};
-un_guides_source.data = {
-  xs: [[x, x], [1, x]],
-  ys: [[0, polynomial], [polynomial, polynomial]],
+const znMinusOne = sub(powInt(z, n), c(1, 0));
+const productVectorScale = productScale(znMinusOne);
+const shownProduct = c(productVectorScale * znMinusOne.re, productVectorScale * znMinusOne.im);
+const angleSum = factorAngles.reduce((acc, value) => acc + value, 0);
+const scaleNote = Math.abs(productVectorScale - 1) < 1e-12
+  ? "unscaled"
+  : `shown at ${productVectorScale.toPrecision(3)}x`;
+
+product_factor_source.data = {
+  xs: factorXs,
+  ys: factorYs,
+  color: ["#0072b2"].concat(Array(n - 1).fill("#9ca3af")),
+  width: [3.0].concat(Array(n - 1).fill(1.4)),
+  alpha: [0.95].concat(Array(n - 1).fill(0.68)),
 };
-un_y_range.end = 1.08 * (Math.pow(2.4, n) - 1);
-un_label.x = x;
-un_label.y = polynomial;
-un_label.text = `U_${n}(${x.toFixed(2)}) = ${fmt(polynomial)}`;
-un_plot.visible = show_un_checkbox.active;
+product_root_source.data = {
+  x: vertices.map((root) => root.re),
+  y: vertices.map((root) => root.im),
+};
+product_root_label_source.data = {
+  x: vertices.map((root) => 1.1 * root.re),
+  y: vertices.map((root) => 1.1 * root.im),
+  label: vertices.map((_, i) => `C${i + 1}`),
+};
+product_z_source.data = {
+  x: [z.re],
+  y: [z.im],
+  label: ["z"],
+};
+product_arrow_source.data = {
+  x: [0, shownProduct.re],
+  y: [0, shownProduct.im],
+};
+product_point_source.data = {
+  x: [shownProduct.re],
+  y: [shownProduct.im],
+  label: [productLabel(productVectorScale)],
+};
+product_summary.text = `
+<b>Complex product</b><br>
+z = ${fmtComplex(z)}<br>
+&prod;(z - C<sub>k</sub>) = ${fmtComplex(complexProduct)}<br>
+z<sup>${n}</sup> - 1 = ${fmtComplex(znMinusOne)}<br>
+R<sub>1</sub>...R<sub>${n}</sub> = ${fmt(radiusProduct)}<br>
+arg sum = ${angleSum.toFixed(3)} rad<br>
+product arrow: ${scaleNote}
+`;
+product_plot.visible = show_product_checkbox.active;
 """

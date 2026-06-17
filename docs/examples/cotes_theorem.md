@@ -13,9 +13,20 @@ U_n(x)=x^n-1=PC_1\,PC_2\cdots PC_n.
 \]
 
 The first panel draws the \(n\)-gon and the distance segments from \(P\) to the
-vertices.  The second panel can be hidden; it plots \(U_n(t)=t^n-1\) and marks
-the currently selected \(x\), making the numerical product in the summary a
-visible value of the polynomial.
+vertices.
+
+The second panel can be hidden.  It stays in the complex plane: the point
+\(z=x+iy\) is joined to each root \(C_k\), so each segment represents the
+complex factor \(z-C_k=R_ke^{i\phi_k}\).  The magenta vector from the origin
+shows the product
+
+\[
+\prod_{k=1}^n (z-C_k)=z^n-1.
+\]
+
+For large \(n\) or large \(|z|\), this product may be too long to draw at true
+scale.  In that case the arrow keeps the correct direction and is labeled with
+its display scale, while the summary reports the true complex value.
 
 ## Real factors from conjugate vertices
 
