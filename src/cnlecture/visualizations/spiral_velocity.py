@@ -303,19 +303,18 @@ dashed lines/circles: rotation guides and infinitesimal model
     )
     overview.scatter(x="x", y="y", source=overview_points, size="size", color="color", alpha=0.96)
     overview.add_layout(_labels(LabelSet, overview_labels, size="12px"))
-    overview.add_layout(
-        Label(
-            x=sources["overview_math_label"]["x"],
-            y=sources["overview_math_label"]["y"],
-            text=TeX(text=r"e^{ibt}(a+ib)", inline=True),
-            x_offset=8,
-            y_offset=8,
-            text_font_size="12px",
-            text_color="#111827",
-            background_fill_color="#ffffff",
-            background_fill_alpha=0.72,
-        )
+    rotated_math_label = Label(
+        x=sources["overview_math_label"]["x"],
+        y=sources["overview_math_label"]["y"],
+        text=TeX(text=r"e^{ibt}(a+ib)", inline=True),
+        x_offset=4,
+        y_offset=4,
+        text_font_size="12px",
+        text_color="#111827",
+        background_fill_color="#ffffff",
+        background_fill_alpha=0.72,
     )
+    overview.add_layout(rotated_math_label)
 
     velocity = sources["overview_velocity"]
     velocity_arrow = Arrow(
@@ -342,18 +341,18 @@ dashed lines/circles: rotation guides and infinitesimal model
         background_fill_alpha=0.72,
     )
     overview.add_layout(velocity_label)
-    radius_label = Label(
-        x=0.5 * velocity["x_start"][0],
-        y=0.5 * velocity["y_start"][0],
+    formula_label = Label(
+        x=1.03,
+        y=0.24,
         text=TeX(text=r"Z(t)=e^{at}e^{ibt}", inline=True),
-        x_offset=26,
-        y_offset=-16,
+        x_offset=8,
+        y_offset=0,
         text_font_size="12px",
         text_color="#111827",
         background_fill_color="#ffffff",
         background_fill_alpha=0.72,
     )
-    overview.add_layout(radius_label)
+    overview.add_layout(formula_label)
 
     finite_x0, finite_x1, finite_y0, finite_y1 = _finite_view(sources, a, b)
     finite = figure(
@@ -423,7 +422,7 @@ dashed lines/circles: rotation guides and infinitesimal model
             overview_bdelta_arc=overview_bdelta_arc,
             velocity_arrow=velocity_arrow,
             velocity_label=velocity_label,
-            radius_label=radius_label,
+            rotated_math_label=rotated_math_label,
             x_range=overview.x_range,
             y_range=overview.y_range,
             finite_x_range=finite.x_range,
@@ -543,6 +542,14 @@ M/(|Z|δ) -> a+ib<br>
 """
 
 
+def _outside_circle_label_point(point: complex, offset: float = 0.14) -> complex:
+    """Return a label anchor just beyond ``point`` on its origin-centered circle."""
+    radius = abs(point)
+    if radius == 0:
+        return point + offset
+    return point * ((radius + offset) / radius)
+
+
 def _local(z: complex, p: complex, theta: float, scale: float = 1.0) -> complex:
     """Return point ``p`` in the local frame based at ``z`` and angle ``theta``."""
     return (p - z) * complex(math.cos(-theta), math.sin(-theta)) / scale
@@ -605,6 +612,8 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
     rotation = complex(math.cos(theta), math.sin(theta))
     rotated_a = model_a * rotation
     rotated_m = model_m * rotation
+    model_m_label = _outside_circle_label_point(model_m)
+    rotated_m_label = _outside_circle_label_point(rotated_m)
     linear_end = z + geom.m_linear
     local_origin = 0 + 0j
     local_radial = _local(z, radial_point, theta, scale)
@@ -713,7 +722,7 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
                 0.0,
                 z.real,
                 z_next.real,
-                model_m.real,
+                model_m_label.real,
                 unit_point.real,
                 bdelta_label.real,
             ],
@@ -721,17 +730,17 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
                 0.0,
                 z.imag,
                 z_next.imag,
-                model_m.imag,
+                model_m_label.imag,
                 unit_point.imag,
                 bdelta_label.imag,
             ],
             "label": ["0", "Z(t)", "Z(t+δ)", "a+ib", "1", "bδ"],
-            "x_offset": [-12, 11, -12, -44, 7, 2],
-            "y_offset": [-6, 2, 12, -4, -10, 4],
+            "x_offset": [-12, 11, -12, 4, 7, 2],
+            "y_offset": [-6, 2, 12, 4, -10, 4],
         },
         "overview_math_label": {
-            "x": rotated_m.real,
-            "y": rotated_m.imag,
+            "x": rotated_m_label.real,
+            "y": rotated_m_label.imag,
         },
         "overview_velocity": {
             "x_start": [z.real],
@@ -865,6 +874,13 @@ function rotate(u, angle) {
 function localPoint(base, point, angle, scale) {
   return mul(rotate(sub(point, base), -angle), 1 / scale);
 }
+function outsideCircleLabelPoint(point, offset = 0.14) {
+  const radius = abs(point);
+  if (radius === 0) {
+    return c(offset, 0);
+  }
+  return mul(point, (radius + offset) / radius);
+}
 function fmt(u) {
   const sign = u.im >= 0 ? " + " : " - ";
   return `${u.re.toFixed(3)}${sign}${Math.abs(u.im).toFixed(3)}i`;
@@ -887,6 +903,8 @@ const modelA = c(a, 0);
 const modelM = c(a, b);
 const rotatedA = rotate(modelA, theta);
 const rotatedM = rotate(modelM, theta);
+const modelMLabel = outsideCircleLabelPoint(modelM);
+const rotatedMLabel = outsideCircleLabelPoint(rotatedM);
 
 const angleCos = dot(aExact, bExact) / (abs(aExact) * abs(bExact));
 const angle = Math.acos(Math.max(-1, Math.min(1, angleCos))) * 180 / Math.PI;
@@ -979,7 +997,7 @@ overview_labels.data = {
     0,
     z.re,
     zNext.re,
-    modelM.re,
+    modelMLabel.re,
     1,
     bdLabel.re,
   ],
@@ -987,13 +1005,13 @@ overview_labels.data = {
     0,
     z.im,
     zNext.im,
-    modelM.im,
+    modelMLabel.im,
     0,
     bdLabel.im,
   ],
   label: ["0", "Z(t)", "Z(t+δ)", "a+ib", "1", "bδ"],
-  x_offset: [-12, 11, -12, -44, 7, 2],
-  y_offset: [-6, 2, 12, -4, -10, 4],
+  x_offset: [-12, 11, -12, 4, 7, 2],
+  y_offset: [-6, 2, 12, 4, -10, 4],
 };
 
 const localOrigin = c(0, 0);
@@ -1073,8 +1091,8 @@ velocity_arrow.y_end = vEnd.im;
 velocity_arrow.change.emit();
 velocity_label.x = z.re + 0.58 * (vEnd.re - z.re);
 velocity_label.y = z.im + 0.58 * (vEnd.im - z.im);
-radius_label.x = 0.5 * z.re;
-radius_label.y = 0.5 * z.im;
+rotated_math_label.x = rotatedMLabel.re;
+rotated_math_label.y = rotatedMLabel.im;
 
 const period = 2 * Math.PI / Math.max(Math.abs(b), 1e-6);
 const tStart = t - 2.5 * period;

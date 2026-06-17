@@ -230,6 +230,26 @@ def test_overview_marks_unit_point_and_bdelta_label():
     )
 
 
+def test_overview_model_labels_sit_outside_their_points():
+    a = 0.4
+    b = 0.95
+    t = 1.85
+    sources = _bokeh_sources(a=a, b=b, t=t, delta=0.2)
+    labels = sources["overview_labels"]
+    model_label_index = labels["label"].index("a+ib")
+    model_point = complex(a, b)
+    model_label = complex(labels["x"][model_label_index], labels["y"][model_label_index])
+    theta = b * t
+    rotated_point = model_point * complex(math.cos(theta), math.sin(theta))
+    rotated_label = complex(
+        sources["overview_math_label"]["x"],
+        sources["overview_math_label"]["y"],
+    )
+
+    assert abs(model_label) > abs(model_point)
+    assert abs(rotated_label) > abs(rotated_point)
+
+
 def test_layout_exposes_abt_delta_sliders():
     pytest.importorskip("bokeh")
     from bokeh.models import Checkbox, Slider
