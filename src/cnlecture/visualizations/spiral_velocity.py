@@ -18,8 +18,12 @@ POINT_COLOR = "#111827"
 A_COLOR = "#e69f00"
 B_COLOR = "#009e73"
 M_COLOR = "#cc79a7"
+V_COLOR = "#0072b2"
 
 COMPONENT_COLORS = [A_COLOR, B_COLOR, M_COLOR]
+
+# Radius of the small ``bδ`` angle arc drawn at the origin inset.
+BDELTA_ARC_RADIUS = 0.34
 
 
 @dataclass(frozen=True)
@@ -118,12 +122,13 @@ def make_spiral_velocity_bokeh(
     a: float = 0.18,
     b: float = 1.0,
     t: float = 1.25,
-    delta: float = 0.22,
+    delta: float = 0.40,
 ):
     """Build a Bokeh figure for the spiral velocity right-triangle argument."""
     try:
         from bokeh.layouts import column, row
         from bokeh.models import (
+            Arrow,
             ColumnDataSource,
             CustomJS,
             Div,
@@ -132,6 +137,7 @@ def make_spiral_velocity_bokeh(
             Range1d,
             Slider,
             TeX,
+            VeeHead,
         )
         from bokeh.plotting import figure
     except ImportError as exc:  # pragma: no cover - depends on optional extra
@@ -141,7 +147,7 @@ def make_spiral_velocity_bokeh(
         ) from exc
 
     sources = _bokeh_sources(a, b, t, delta)
-    curve = spiral_curve(a, b)
+    curve = spiral_curve(a, b, t_min=-5.5)
     unit = np.exp(1j * np.linspace(0, 2 * math.pi, 240))
 
     curve_source = ColumnDataSource(data=dict(x=curve.real.tolist(), y=curve.imag.tolist()))
@@ -156,12 +162,17 @@ def make_spiral_velocity_bokeh(
     overview_step = ColumnDataSource(data=sources["overview_step"])
     overview_points = ColumnDataSource(data=sources["overview_points"])
     overview_labels = ColumnDataSource(data=sources["overview_labels"])
+    overview_bdelta_arc = ColumnDataSource(data=sources["overview_bdelta_arc"])
     finite_shade = ColumnDataSource(data=sources["finite_shade"])
     finite_exact = ColumnDataSource(data=sources["finite_exact"])
     finite_ideal = ColumnDataSource(data=sources["finite_ideal"])
     finite_points = ColumnDataSource(data=sources["finite_points"])
     finite_labels = ColumnDataSource(data=sources["finite_labels"])
-    summary = Div(text=_format_summary(spiral_step_geometry(a, b, t, delta)), width=360, styles=_panel_styles())
+    summary = Div(
+        text=_format_summary(spiral_step_geometry(a, b, t, delta), a, b),
+        width=360,
+        styles=_panel_styles(),
+    )
     legend = Div(
         text=f"""
 <b>Color key</b><br>
@@ -169,6 +180,7 @@ def make_spiral_velocity_bokeh(
 <span style="color:{A_COLOR}">A</span>: radial change<br>
 <span style="color:{B_COLOR}">B</span>: turning chord<br>
 <span style="color:{M_COLOR}">M</span>: finite movement<br>
+<span style="color:{V_COLOR}">V</span>: velocity (a+ib)Z<br>
 dashed lines/circles: rotation guides and infinitesimal model
 """,
         width=360,
@@ -181,18 +193,19 @@ dashed lines/circles: rotation guides and infinitesimal model
     )
 
     overview = figure(
-        width=520,
-        height=520,
-        x_range=Range1d(-2.2, 2.2, bounds=(-5.0, 5.0)),
-        y_range=Range1d(-2.2, 2.2, bounds=(-5.0, 5.0)),
+        width=560,
+        height=560,
+        x_range=Range1d(-2.3, 2.3, bounds=(-16.0, 16.0)),
+        y_range=Range1d(-2.3, 2.3, bounds=(-16.0, 16.0)),
         x_axis_label="Re",
         y_axis_label="Im",
         match_aspect=True,
         tools="pan,wheel_zoom,reset,save",
         toolbar_location="above",
-        title="1. Actual finite step on the spiral",
+        title="1. Velocity on the spiral:  V = (a+ib) Z",
     )
     _quiet_axes(overview)
+    overview.grid.grid_line_alpha = 0.12
     overview.line(
         x="x",
         y="y",
@@ -236,13 +249,21 @@ dashed lines/circles: rotation guides and infinitesimal model
         line_width=1.4,
         alpha=0.58,
     )
+    overview.line(
+        x="x",
+        y="y",
+        source=overview_bdelta_arc,
+        line_color=GUIDE_COLOR,
+        line_width=1.8,
+        alpha=0.9,
+    )
     overview.multi_line(
         xs="xs",
         ys="ys",
         source=overview_origin_model,
         line_color="color",
-        line_width=3,
-        alpha=0.74,
+        line_width=2,
+        alpha=0.5,
     )
     overview.multi_line(
         xs="xs",
@@ -250,8 +271,8 @@ dashed lines/circles: rotation guides and infinitesimal model
         source=overview_rotated_model,
         line_color="color",
         line_dash="dashed",
-        line_width=3,
-        alpha=0.72,
+        line_width=2.5,
+        alpha=0.65,
     )
     overview.multi_line(
         xs="xs",
@@ -259,16 +280,16 @@ dashed lines/circles: rotation guides and infinitesimal model
         source=overview_b_chord,
         line_color="color",
         line_dash="dashed",
-        line_width=3,
-        alpha=0.78,
+        line_width=2.5,
+        alpha=0.7,
     )
     overview.multi_line(
         xs="xs",
         ys="ys",
         source=overview_step,
         line_color="color",
-        line_width=4,
-        alpha=0.92,
+        line_width=5,
+        alpha=0.95,
     )
     overview.scatter(x="x", y="y", source=overview_points, size="size", color="color", alpha=0.96)
     overview.add_layout(_labels(LabelSet, overview_labels, size="12px"))
@@ -286,9 +307,46 @@ dashed lines/circles: rotation guides and infinitesimal model
         )
     )
 
+    velocity = sources["overview_velocity"]
+    velocity_arrow = Arrow(
+        end=VeeHead(size=16, fill_color=V_COLOR, line_color=V_COLOR),
+        x_start=velocity["x_start"][0],
+        y_start=velocity["y_start"][0],
+        x_end=velocity["x_end"][0],
+        y_end=velocity["y_end"][0],
+        line_color=V_COLOR,
+        line_width=4,
+        line_alpha=0.95,
+    )
+    overview.add_layout(velocity_arrow)
+    velocity_label = Label(
+        x=velocity["x_start"][0] + 0.58 * (velocity["x_end"][0] - velocity["x_start"][0]),
+        y=velocity["y_start"][0] + 0.58 * (velocity["y_end"][0] - velocity["y_start"][0]),
+        text=TeX(text="V", inline=True),
+        x_offset=7,
+        y_offset=5,
+        text_font_size="16px",
+        text_color=V_COLOR,
+        background_fill_color="#ffffff",
+        background_fill_alpha=0.72,
+    )
+    overview.add_layout(velocity_label)
+    radius_label = Label(
+        x=0.5 * velocity["x_start"][0],
+        y=0.5 * velocity["y_start"][0],
+        text=TeX(text=r"Z(t)=e^{at}e^{ibt}", inline=True),
+        x_offset=26,
+        y_offset=-16,
+        text_font_size="12px",
+        text_color="#111827",
+        background_fill_color="#ffffff",
+        background_fill_alpha=0.72,
+    )
+    overview.add_layout(radius_label)
+
     finite = figure(
-        width=520,
-        height=520,
+        width=560,
+        height=560,
         x_range=Range1d(-0.35, 1.35, bounds=(-2.0, 2.0)),
         y_range=Range1d(-0.35, 1.35, bounds=(-2.0, 2.0)),
         x_axis_label="radial component divided by |Z|δ",
@@ -327,10 +385,17 @@ dashed lines/circles: rotation guides and infinitesimal model
     finite.scatter(x="x", y="y", source=finite_points, size="size", color="color", alpha=0.96)
     finite.add_layout(_labels(LabelSet, finite_labels, size="12px"))
 
-    slider = Slider(title="δ", start=0.02, end=1.2, step=0.02, value=delta, width=360)
+    a_slider = Slider(title="a  (growth rate)", start=0.0, end=0.45, step=0.01, value=a, width=360)
+    b_slider = Slider(title="b  (angular speed)", start=0.3, end=1.8, step=0.05, value=b, width=360)
+    t_slider = Slider(title="t  (point on spiral)", start=0.2, end=2.6, step=0.05, value=t, width=360)
+    delta_slider = Slider(title="δ  (finite step)", start=0.02, end=1.2, step=0.02, value=delta, width=360)
     callback = CustomJS(
         args=dict(
-            slider=slider,
+            a_slider=a_slider,
+            b_slider=b_slider,
+            t_slider=t_slider,
+            delta_slider=delta_slider,
+            curve_source=curve_source,
             overview_guides=overview_guides,
             overview_local_shade=overview_local_shade,
             overview_origin_shade=overview_origin_shade,
@@ -341,6 +406,12 @@ dashed lines/circles: rotation guides and infinitesimal model
             overview_step=overview_step,
             overview_points=overview_points,
             overview_labels=overview_labels,
+            overview_bdelta_arc=overview_bdelta_arc,
+            velocity_arrow=velocity_arrow,
+            velocity_label=velocity_label,
+            radius_label=radius_label,
+            x_range=overview.x_range,
+            y_range=overview.y_range,
             finite_shade=finite_shade,
             finite_exact=finite_exact,
             finite_ideal=finite_ideal,
@@ -349,9 +420,7 @@ dashed lines/circles: rotation guides and infinitesimal model
             summary=summary,
         ),
         code=(
-            _BOKEH_UPDATE_JS.replace("__A__", repr(a))
-            .replace("__B__", repr(b))
-            .replace("__T__", repr(t))
+            _BOKEH_UPDATE_JS.replace("__BDELTA_ARC_RADIUS__", repr(BDELTA_ARC_RADIUS))
             .replace("__GUIDE_COLOR__", GUIDE_COLOR)
             .replace("__UNIT_COLOR__", UNIT_COLOR)
             .replace("__POINT_COLOR__", POINT_COLOR)
@@ -360,11 +429,13 @@ dashed lines/circles: rotation guides and infinitesimal model
             .replace("__M_COLOR__", M_COLOR)
         ),
     )
-    slider.js_on_change("value", callback)
+    for control in (a_slider, b_slider, t_slider, delta_slider):
+        control.js_on_change("value", callback)
 
+    controls = column(a_slider, b_slider, t_slider, delta_slider, width=380)
     return column(
         row(overview, finite),
-        row(column(slider, summary, legend, width=380)),
+        row(controls, column(summary, legend, width=380)),
         sizing_mode="stretch_width",
     )
 
@@ -374,7 +445,7 @@ def export_spiral_velocity_html(
     a: float = 0.18,
     b: float = 1.0,
     t: float = 1.25,
-    delta: float = 0.22,
+    delta: float = 0.40,
 ) -> Path:
     """Write a standalone Bokeh HTML file for the spiral velocity example."""
     try:
@@ -435,7 +506,7 @@ def _format_complex(z: complex) -> str:
     return f"{z.real:.3f} {sign} {abs(z.imag):.3f}i"
 
 
-def _format_summary(geometry: SpiralStepGeometry) -> str:
+def _format_summary(geometry: SpiralStepGeometry, a: float, b: float) -> str:
     linear_error = abs(geometry.m - geometry.m_linear)
     return f"""
 <b>Finite δ</b><br>
@@ -445,8 +516,8 @@ angle(A,B) = {geometry.angle_degrees:.2f} deg<br>
 error from 90 deg = {geometry.perpendicular_error_degrees:.2f} deg<br>
 <br>
 <b>As δ tends to 0</b><br>
-A/(|Z|δ) -> a = 0.180<br>
-B/(|Z|δ) -> ib = 1.000i<br>
+A/(|Z|δ) -> a = {a:.3f}<br>
+B/(|Z|δ) -> ib = {b:.3f}i<br>
 M/(|Z|δ) -> a+ib<br>
 |M - model| = {linear_error:.4f}
 """
@@ -482,6 +553,15 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
     local_radial = _local(z, radial_point, theta, scale)
     local_next = _local(z, z_next, theta, scale)
     local_ideal = _local(z, linear_end, theta, scale)
+
+    v_vec = complex(a, b) * z
+    v_end = z + v_vec
+    bdelta_arc = BDELTA_ARC_RADIUS * np.exp(1j * np.linspace(theta, next_theta, 40))
+    bdelta_mid = 0.5 * (theta + next_theta)
+    bdelta_label = (BDELTA_ARC_RADIUS + 0.13) * complex(
+        math.cos(bdelta_mid), math.sin(bdelta_mid)
+    )
+    unit_point = complex(1.0, 0.0)
 
     return {
         "overview_guides": {
@@ -548,10 +628,26 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
             "color": COMPONENT_COLORS,
         },
         "overview_points": {
-            "x": [0.0, z.real, radial_point.real, z_next.real, model_m.real, rotated_m.real],
-            "y": [0.0, z.imag, radial_point.imag, z_next.imag, model_m.imag, rotated_m.imag],
-            "color": [POINT_COLOR, POINT_COLOR, A_COLOR, M_COLOR, M_COLOR, M_COLOR],
-            "size": [7, 9, 8, 9, 8, 8],
+            "x": [
+                0.0,
+                z.real,
+                radial_point.real,
+                z_next.real,
+                model_m.real,
+                rotated_m.real,
+                unit_point.real,
+            ],
+            "y": [
+                0.0,
+                z.imag,
+                radial_point.imag,
+                z_next.imag,
+                model_m.imag,
+                rotated_m.imag,
+                unit_point.imag,
+            ],
+            "color": [POINT_COLOR, POINT_COLOR, A_COLOR, M_COLOR, M_COLOR, M_COLOR, POINT_COLOR],
+            "size": [7, 9, 8, 9, 8, 8, 6],
         },
         "overview_labels": {
             "x": [
@@ -559,20 +655,34 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
                 z.real,
                 z_next.real,
                 model_m.real,
+                unit_point.real,
+                bdelta_label.real,
             ],
             "y": [
                 0.0,
                 z.imag,
                 z_next.imag,
                 model_m.imag,
+                unit_point.imag,
+                bdelta_label.imag,
             ],
-            "label": ["0", "Z(t)", "Z(t+δ)", "a+ib"],
-            "x_offset": [8, 8, 8, 8],
-            "y_offset": [8, 8, 8, 8],
+            "label": ["0", "Z(t)", "Z(t+δ)", "a+ib", "1", "bδ"],
+            "x_offset": [-12, 11, -12, -44, 7, 2],
+            "y_offset": [-6, 2, 12, -4, -10, 4],
         },
         "overview_math_label": {
             "x": rotated_m.real,
             "y": rotated_m.imag,
+        },
+        "overview_velocity": {
+            "x_start": [z.real],
+            "y_start": [z.imag],
+            "x_end": [v_end.real],
+            "y_end": [v_end.imag],
+        },
+        "overview_bdelta_arc": {
+            "x": bdelta_arc.real.tolist(),
+            "y": bdelta_arc.imag.tolist(),
         },
         "finite_shade": {
             "x": [local_origin.real, local_radial.real, local_next.real],
@@ -625,10 +735,11 @@ def _bokeh_sources(a: float, b: float, t: float, delta: float) -> dict[str, dict
 
 
 _BOKEH_UPDATE_JS = r"""
-const a = __A__;
-const b = __B__;
-const t = __T__;
-const delta = slider.value;
+const a = a_slider.value;
+const b = b_slider.value;
+const t = t_slider.value;
+const delta = delta_slider.value;
+const ARC_RADIUS = __BDELTA_ARC_RADIUS__;
 const GUIDE_COLOR = "__GUIDE_COLOR__";
 const UNIT_COLOR = "__UNIT_COLOR__";
 const POINT_COLOR = "__POINT_COLOR__";
@@ -760,11 +871,23 @@ overview_step.data = {
   ys: [[z.im, radialPoint.im], [radialPoint.im, zNext.im], [z.im, zNext.im]],
   color: COMPONENT_COLORS,
 };
+const bdArcX = [];
+const bdArcY = [];
+for (let k = 0; k < 40; k += 1) {
+  const u = theta + (thetaNext - theta) * k / 39;
+  const p = expPoint(ARC_RADIUS, u);
+  bdArcX.push(p.re);
+  bdArcY.push(p.im);
+}
+overview_bdelta_arc.data = { x: bdArcX, y: bdArcY };
+const bdMid = 0.5 * (theta + thetaNext);
+const bdLabel = expPoint(ARC_RADIUS + 0.13, bdMid);
+
 overview_points.data = {
-  x: [0, z.re, radialPoint.re, zNext.re, modelM.re, rotatedM.re],
-  y: [0, z.im, radialPoint.im, zNext.im, modelM.im, rotatedM.im],
-  color: [POINT_COLOR, POINT_COLOR, A_COLOR, M_COLOR, M_COLOR, M_COLOR],
-  size: [7, 9, 8, 9, 8, 8],
+  x: [0, z.re, radialPoint.re, zNext.re, modelM.re, rotatedM.re, 1],
+  y: [0, z.im, radialPoint.im, zNext.im, modelM.im, rotatedM.im, 0],
+  color: [POINT_COLOR, POINT_COLOR, A_COLOR, M_COLOR, M_COLOR, M_COLOR, POINT_COLOR],
+  size: [7, 9, 8, 9, 8, 8, 6],
 };
 overview_labels.data = {
   x: [
@@ -772,16 +895,20 @@ overview_labels.data = {
     z.re,
     zNext.re,
     modelM.re,
+    1,
+    bdLabel.re,
   ],
   y: [
     0,
     z.im,
     zNext.im,
     modelM.im,
+    0,
+    bdLabel.im,
   ],
-  label: ["0", "Z(t)", "Z(t+δ)", "a+ib"],
-  x_offset: [8, 8, 8, 8],
-  y_offset: [8, 8, 8, 8],
+  label: ["0", "Z(t)", "Z(t+δ)", "a+ib", "1", "bδ"],
+  x_offset: [-12, 11, -12, -44, 7, 2],
+  y_offset: [-6, 2, 12, -4, -10, 4],
 };
 
 const localOrigin = c(0, 0);
@@ -850,4 +977,41 @@ B/(|Z|δ) -> ib = ${b.toFixed(3)}i<br>
 M/(|Z|δ) -> a+ib<br>
 |M - model| = ${linearError.toFixed(4)}
 `;
+
+// velocity vector, moving labels, recomputed spiral, and auto-fit view
+const vVec = add(mul(z, a), mul(muli(z), b));
+const vEnd = add(z, vVec);
+velocity_arrow.x_start = z.re;
+velocity_arrow.y_start = z.im;
+velocity_arrow.x_end = vEnd.re;
+velocity_arrow.y_end = vEnd.im;
+velocity_arrow.change.emit();
+velocity_label.x = z.re + 0.58 * (vEnd.re - z.re);
+velocity_label.y = z.im + 0.58 * (vEnd.im - z.im);
+radius_label.x = 0.5 * z.re;
+radius_label.y = 0.5 * z.im;
+
+const period = 2 * Math.PI / Math.max(Math.abs(b), 1e-6);
+const tStart = t - 2.5 * period;
+const tEnd = t + delta + 0.6 * period;
+const NS = 600;
+const curveX = [];
+const curveY = [];
+for (let k = 0; k < NS; k += 1) {
+  const tt = tStart + (tEnd - tStart) * k / (NS - 1);
+  const p = expPoint(Math.exp(a * tt), b * tt);
+  curveX.push(p.re);
+  curveY.push(p.im);
+}
+curve_source.data = { x: curveX, y: curveY };
+
+const fitX = [0, z.re, zNext.re, radialPoint.re, vEnd.re, rotatedM.re, modelM.re, 1];
+const fitY = [0, z.im, zNext.im, radialPoint.im, vEnd.im, rotatedM.im, modelM.im, 0];
+let maxr = 1.05;
+for (let k = 0; k < fitX.length; k += 1) {
+  maxr = Math.max(maxr, Math.hypot(fitX[k], fitY[k]));
+}
+const R = Math.max(1.3, 1.18 * maxr);
+x_range.setv({ start: -R, end: R });
+y_range.setv({ start: -R, end: R });
 """

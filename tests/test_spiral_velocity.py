@@ -5,6 +5,7 @@ import math
 import pytest
 
 from cnlecture.visualizations.spiral_velocity import (
+    BDELTA_ARC_RADIUS,
     COMPONENT_COLORS,
     M_COLOR,
     _bokeh_sources,
@@ -155,3 +156,54 @@ def test_origin_model_uses_actual_a_plus_ib_endpoint():
     assert origin_model["xs"][2][1] == pytest.approx(a)
     assert origin_model["ys"][2][1] == pytest.approx(b)
     assert math.hypot(origin_model["xs"][2][1], origin_model["ys"][2][1]) != pytest.approx(1.0)
+
+
+def test_overview_velocity_is_a_plus_ib_times_z():
+    a, b, t, delta = 0.18, 1.0, 1.25, 0.4
+    sources = _bokeh_sources(a=a, b=b, t=t, delta=delta)
+    velocity = sources["overview_velocity"]
+    z = spiral_point(a, b, t)
+    v_vec = complex(a, b) * z
+
+    assert velocity["x_start"][0] == pytest.approx(z.real)
+    assert velocity["y_start"][0] == pytest.approx(z.imag)
+    assert velocity["x_end"][0] == pytest.approx(z.real + v_vec.real)
+    assert velocity["y_end"][0] == pytest.approx(z.imag + v_vec.imag)
+
+
+def test_overview_bdelta_arc_spans_the_angular_step():
+    a, b, t, delta = 0.18, 1.0, 1.25, 0.4
+    sources = _bokeh_sources(a=a, b=b, t=t, delta=delta)
+    arc = sources["overview_bdelta_arc"]
+    xs, ys = arc["x"], arc["y"]
+
+    assert len(xs) == len(ys) > 2
+    assert math.hypot(xs[0], ys[0]) == pytest.approx(BDELTA_ARC_RADIUS)
+    assert math.hypot(xs[-1], ys[-1]) == pytest.approx(BDELTA_ARC_RADIUS)
+    assert math.atan2(ys[0], xs[0]) == pytest.approx(b * t)
+    assert math.atan2(ys[-1], xs[-1]) == pytest.approx(b * (t + delta))
+
+
+def test_overview_marks_unit_point_and_bdelta_label():
+    sources = _bokeh_sources(a=0.18, b=1.0, t=1.25, delta=0.4)
+    labels = sources["overview_labels"]["label"]
+    points = sources["overview_points"]
+
+    assert "1" in labels
+    assert "bδ" in labels
+    assert any(
+        px == pytest.approx(1.0) and py == pytest.approx(0.0)
+        for px, py in zip(points["x"], points["y"])
+    )
+
+
+def test_layout_exposes_abt_delta_sliders():
+    pytest.importorskip("bokeh")
+    from bokeh.models import Slider
+
+    from cnlecture.visualizations.spiral_velocity import make_spiral_velocity_bokeh
+
+    layout = make_spiral_velocity_bokeh()
+    titles = [m.title for m in layout.references() if isinstance(m, Slider)]
+
+    assert sorted(title.split()[0] for title in titles) == ["a", "b", "t", "δ"]
