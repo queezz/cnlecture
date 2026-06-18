@@ -80,6 +80,7 @@ nav:
       - "Spiral velocity": examples/spiral_velocity.md
       - "Cotes' theorem": examples/cotes_theorem.md
       - "Triangle distance locator": examples/triangle_distance_locator.md
+      - "Direct motion from one segment": examples/direct_segment_motion.md
   - Dev:
       - Getting Started: getting_started.md
       - API Reference:
@@ -91,4 +92,5 @@ nav:
           - "visualizations.spiral_velocity": api/visualizations_spiral_velocity.md
           - "visualizations.cotes_theorem": api/visualizations_cotes_theorem.md
           - "visualizations.triangle_distance_locator": api/visualizations_triangle_distance_locator.md
+          - "visualizations.direct_segment_motion": api/visualizations_direct_segment_motion.md
       - Known Issues: broken_or_pending.md

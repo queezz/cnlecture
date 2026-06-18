@@ -8,6 +8,17 @@ from cnlecture.visualizations.cotes_theorem import (
     export_cotes_theorem_html,
     make_cotes_theorem_bokeh,
 )
+from cnlecture.visualizations.direct_segment_motion import (
+    SegmentMotionGeometry,
+    apply_segment_motion,
+    classify_direct_motion,
+    default_segment,
+    direct_motion_rotation_center,
+    export_direct_segment_motion_html,
+    make_direct_segment_motion_bokeh,
+    rotate_image_back,
+    segment_motion_geometry,
+)
 from cnlecture.visualizations.euler import (
     euler_series_points,
     euler_series_terms,
@@ -74,6 +85,15 @@ __all__ = [
     "cotes_quadratic_coefficients",
     "make_cotes_theorem_bokeh",
     "export_cotes_theorem_html",
+    "SegmentMotionGeometry",
+    "default_segment",
+    "apply_segment_motion",
+    "direct_motion_rotation_center",
+    "rotate_image_back",
+    "classify_direct_motion",
+    "segment_motion_geometry",
+    "make_direct_segment_motion_bokeh",
+    "export_direct_segment_motion_html",
     "SpiralStepGeometry",
     "spiral_point",
     "spiral_curve",
