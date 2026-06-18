@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from cnlecture.visualizations.cotes_theorem import (
+    ROOT_LABEL_RADIUS,
     _bokeh_sources,
     _factor_terms,
     _product_bokeh_sources,
@@ -58,6 +59,16 @@ def test_bokeh_sources_describe_polygon_and_rays():
     assert len(sources["rays"]["xs"]) == 6
     assert sources["vertex_labels"]["label"] == ["C1", "C2", "C3", "C4", "C5", "C6"]
     assert sources["point"]["x"] == [1.5]
+
+
+def test_root_labels_sit_on_radius_outside_unit_circle():
+    sources = _bokeh_sources(7, 1.5)
+    product_sources = _product_bokeh_sources(7, 1.5, 0.4)
+
+    for label_source in (sources["vertex_labels"], product_sources["root_labels"]):
+        radii = np.hypot(label_source["x"], label_source["y"])
+
+        assert radii == pytest.approx(np.full(7, ROOT_LABEL_RADIUS))
 
 
 def test_product_sources_show_complex_factor_picture():

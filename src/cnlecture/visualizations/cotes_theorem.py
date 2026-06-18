@@ -65,6 +65,7 @@ def cotes_quadratic_coefficients(n: int) -> list[float]:
 
 
 PRODUCT_VECTOR_MAX = 1.75
+ROOT_LABEL_RADIUS = 1.18
 
 
 def make_cotes_theorem_bokeh(n: int = 5, x: float = 1.65, y: float = 0.45):
@@ -217,10 +218,12 @@ def make_cotes_theorem_bokeh(n: int = 5, x: float = 1.65, y: float = 0.45):
             y="y",
             text="label",
             source=vertex_label_source,
-            x_offset=3,
-            y_offset=3,
+            x_offset=0,
+            y_offset=0,
             text_font_size="13px",
             text_color="#111827",
+            text_align="center",
+            text_baseline="middle",
         )
     )
     plot.add_layout(
@@ -334,10 +337,12 @@ def make_cotes_theorem_bokeh(n: int = 5, x: float = 1.65, y: float = 0.45):
             y="y",
             text="label",
             source=product_root_label_source,
-            x_offset=3,
-            y_offset=3,
+            x_offset=0,
+            y_offset=0,
             text_font_size="12px",
             text_color="#111827",
+            text_align="center",
+            text_baseline="middle",
         )
     )
     product_plot.add_layout(
@@ -463,8 +468,8 @@ def _bokeh_sources(n: int, x: float) -> dict[str, dict[str, list]]:
             "y": [z.imag for z in vertices],
         },
         "vertex_labels": {
-            "x": [1.1 * z.real for z in vertices],
-            "y": [1.1 * z.imag for z in vertices],
+            "x": [ROOT_LABEL_RADIUS * z.real for z in vertices],
+            "y": [ROOT_LABEL_RADIUS * z.imag for z in vertices],
             "label": [f"C{i}" for i in range(1, n + 1)],
         },
         "point": {
@@ -497,8 +502,8 @@ def _product_bokeh_sources(n: int, x: float, y: float) -> dict[str, dict[str, li
             "y": [root.imag for root in vertices],
         },
         "root_labels": {
-            "x": [1.1 * root.real for root in vertices],
-            "y": [1.1 * root.imag for root in vertices],
+            "x": [ROOT_LABEL_RADIUS * root.real for root in vertices],
+            "y": [ROOT_LABEL_RADIUS * root.imag for root in vertices],
             "label": [f"C{i}" for i in range(1, n + 1)],
         },
         "z": {
@@ -692,8 +697,8 @@ vertex_source.data = {
   y: vertices.map((z) => z.im),
 };
 vertex_label_source.data = {
-  x: vertices.map((z) => 1.1 * z.re),
-  y: vertices.map((z) => 1.1 * z.im),
+  x: vertices.map((z) => 1.18 * z.re),
+  y: vertices.map((z) => 1.18 * z.im),
   label: vertices.map((_, i) => `C${i + 1}`),
 };
 point_source.data = {
@@ -766,8 +771,8 @@ product_root_source.data = {
   y: vertices.map((root) => root.im),
 };
 product_root_label_source.data = {
-  x: vertices.map((root) => 1.1 * root.re),
-  y: vertices.map((root) => 1.1 * root.im),
+  x: vertices.map((root) => 1.18 * root.re),
+  y: vertices.map((root) => 1.18 * root.im),
   label: vertices.map((_, i) => `C${i + 1}`),
 };
 product_z_source.data = {
