@@ -137,6 +137,7 @@ def make_direct_segment_motion_bokeh(
     sources = _bokeh_sources(geometry)
 
     source_segment = ColumnDataSource(data=sources["source_segment"])
+    target_anchor = ColumnDataSource(data=sources["target_anchor"])
     target_segment = ColumnDataSource(data=sources["target_segment"])
     target_labels = ColumnDataSource(data=sources["target_labels"])
     connector_source = ColumnDataSource(data=sources["connectors"])
@@ -190,6 +191,16 @@ def make_direct_segment_motion_bokeh(
     )
     plot.scatter(x="x", y="y", source=center_source, size="size", fill_color="#ffffff", line_color=CENTER_COLOR, line_width=2.4)
     plot.scatter(x="x", y="y", source=target_labels, size=11, fill_color="#ffffff", line_color=TARGET_COLOR, line_width=2)
+    target_anchor_handle = plot.scatter(
+        x="x",
+        y="y",
+        source=target_anchor,
+        marker="square",
+        size=34,
+        fill_color=TARGET_COLOR,
+        fill_alpha=0.12,
+        line_alpha=0.0,
+    )
     plot.scatter(x="x", y="y", source=back_segment_source, size=10, fill_color="#ffffff", line_color=CONSTRUCTION_COLOR, line_width=2)
     source_points = plot.scatter(x="x", y="y", source=source_segment, size=13, fill_color=POINT_COLOR, line_color="#4c1d95", line_width=2)
     drag_handles = plot.scatter(
@@ -207,21 +218,18 @@ def make_direct_segment_motion_bokeh(
     plot.add_layout(_labels(LabelSet, back_segment_source, CONSTRUCTION_COLOR, size="12px"))
     plot.add_layout(_labels(LabelSet, center_source, CENTER_COLOR, size="12px"))
 
-    draw_tool = PointDrawTool(renderers=[drag_handles, source_points], add=False)
+    draw_tool = PointDrawTool(renderers=[drag_handles, source_points, target_anchor_handle], add=False)
     plot.add_tools(draw_tool)
     plot.toolbar.active_tap = draw_tool
 
     angle_slider = Slider(title="theta (degrees)", start=-180, end=180, step=1, value=angle_degrees, width=330)
-    tx_slider = Slider(title="translation x", start=-0.5, end=3.2, step=0.02, value=translation.real, width=330)
-    ty_slider = Slider(title="translation y", start=-1.2, end=1.8, step=0.02, value=translation.imag, width=330)
     back_slider = Slider(title="rotate image back (%)", start=0, end=100, step=1, value=0, width=330)
 
     callback = CustomJS(
         args=dict(
             angle_slider=angle_slider,
-            tx_slider=tx_slider,
-            ty_slider=ty_slider,
             source_segment=source_segment,
+            target_anchor=target_anchor,
             target_segment=target_segment,
             target_labels=target_labels,
             connector_source=connector_source,
@@ -236,11 +244,12 @@ def make_direct_segment_motion_bokeh(
         ),
         code=_BOKEH_UPDATE_JS,
     )
-    for control in (angle_slider, tx_slider, ty_slider, back_slider):
+    for control in (angle_slider, back_slider):
         control.js_on_change("value", callback)
     source_segment.js_on_change("data", callback)
+    target_anchor.js_on_change("data", callback)
 
-    controls = column(angle_slider, tx_slider, ty_slider, back_slider, summary, width=390)
+    controls = column(angle_slider, back_slider, summary, width=390)
     return row(plot, controls, sizing_mode="stretch_width")
 
 
@@ -311,6 +320,11 @@ def _bokeh_sources(geometry: SegmentMotionGeometry) -> dict[str, dict[str, list]
             "x": source.real.tolist(),
             "y": source.imag.tolist(),
             "label": ["A", "B"],
+        },
+        "target_anchor": {
+            "x": [target[0].real],
+            "y": [target[0].imag],
+            "label": ["A'"],
         },
         "target_segment": {
             "x": target.real.tolist(),
@@ -404,9 +418,8 @@ def _panel_styles() -> dict[str, str]:
 _BOKEH_UPDATE_JS = r"""
 const thetaDegrees = angle_slider.value;
 const theta = thetaDegrees * Math.PI / 180;
-const tx = tx_slider.value;
-const ty = ty_slider.value;
 const source = source_segment.data.x.map((x, i) => ({re: x, im: source_segment.data.y[i]}));
+const anchor = {re: target_anchor.data.x[0], im: target_anchor.data.y[0]};
 
 function c(re, im) {
   return {re: re, im: im};
@@ -426,9 +439,6 @@ function div(a, b) {
 }
 function abs(z) {
   return Math.hypot(z.re, z.im);
-}
-function transform(z) {
-  return add(mul(rotation, z), c(tx, ty));
 }
 function rotateAround(z, center, degrees) {
   const amount = degrees * Math.PI / 180;
@@ -460,11 +470,12 @@ function arcPath(center, start, degrees) {
 }
 
 const rotation = c(Math.cos(theta), Math.sin(theta));
-const target = source.map(transform);
+const target = [anchor, add(anchor, mul(rotation, sub(source[1], source[0])))];
+const translation = sub(anchor, mul(rotation, source[0]));
 const isTranslation = abs(sub(rotation, c(1, 0))) < 1e-10;
 let center = null;
 if (!isTranslation) {
-  center = div(c(tx, ty), sub(c(1, 0), rotation));
+  center = div(translation, sub(c(1, 0), rotation));
 }
 const backFraction = back_slider.value / 100;
 
@@ -526,7 +537,7 @@ summary.text = `
 <b>Direct motion</b><br>
 M(z) = e<sup>i theta</sup>z + v<br>
 theta = ${fmt(thetaDegrees)} degrees<br>
-v = ${fmtComplex(c(tx, ty))}<br>
+v = ${fmtComplex(translation)}<br>
 classification = <b>${isTranslation ? "translation" : "rotation"}</b><br>
 ${centerLine}<br>
 image back-rotation = ${isTranslation ? "n/a" : `${fmt(back_slider.value)}%`}<br>

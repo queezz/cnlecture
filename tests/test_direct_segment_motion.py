@@ -84,6 +84,9 @@ def test_bokeh_sources_switch_between_vector_and_rotation_center():
     rotation_sources = _bokeh_sources(segment_motion_geometry(angle_degrees=30.0))
 
     assert translation_sources["source_segment"]["label"] == ["A", "B"]
+    assert translation_sources["target_anchor"]["label"] == ["A'"]
+    assert translation_sources["target_anchor"]["x"] == [pytest.approx(translation_sources["target_segment"]["x"][0])]
+    assert translation_sources["target_anchor"]["y"] == [pytest.approx(translation_sources["target_segment"]["y"][0])]
     assert "source_labels" not in translation_sources
     assert len(translation_sources["vector"]["x0"]) == 1
     assert len(translation_sources["center"]["x"]) == 0
@@ -107,8 +110,6 @@ def test_layout_exposes_direct_motion_controls():
 
     assert sliders == {
         "theta (degrees)": 42.0,
-        "translation x": 1.85,
-        "translation y": 0.55,
         "rotate image back (%)": 0,
     }
     assert slider_ranges["theta (degrees)"] == (-180, 180)
