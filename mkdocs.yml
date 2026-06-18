@@ -79,6 +79,7 @@ nav:
       - "Triangle and squares": examples/triangle_midpoint.md
       - "Spiral velocity": examples/spiral_velocity.md
       - "Cotes' theorem": examples/cotes_theorem.md
+      - "Triangle distance locator": examples/triangle_distance_locator.md
   - Dev:
       - Getting Started: getting_started.md
       - API Reference:
@@ -89,4 +90,5 @@ nav:
           - "visualizations.triangle_midpoint": api/visualizations_triangle_midpoint.md
           - "visualizations.spiral_velocity": api/visualizations_spiral_velocity.md
           - "visualizations.cotes_theorem": api/visualizations_cotes_theorem.md
+          - "visualizations.triangle_distance_locator": api/visualizations_triangle_distance_locator.md
       - Known Issues: broken_or_pending.md

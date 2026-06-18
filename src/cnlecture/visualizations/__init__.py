@@ -33,6 +33,18 @@ from cnlecture.visualizations.spiral_velocity import (
     spiral_point,
     spiral_step_geometry,
 )
+from cnlecture.visualizations.triangle_distance_locator import (
+    LocatorGeometry,
+    apply_direct_motion,
+    circle_intersections,
+    default_locator_point,
+    default_locator_triangle,
+    export_triangle_distance_locator_html,
+    locator_geometry,
+    locator_radii,
+    make_triangle_distance_locator_bokeh,
+    oriented_triangle_area,
+)
 from cnlecture.visualizations.triangle_midpoint import (
     default_triangle_vertices,
     export_triangle_midpoint_html,
@@ -76,4 +88,14 @@ __all__ = [
     "triangle_third_side_midpoint",
     "make_triangle_midpoint_bokeh",
     "export_triangle_midpoint_html",
+    "LocatorGeometry",
+    "default_locator_triangle",
+    "default_locator_point",
+    "oriented_triangle_area",
+    "apply_direct_motion",
+    "locator_radii",
+    "circle_intersections",
+    "locator_geometry",
+    "make_triangle_distance_locator_bokeh",
+    "export_triangle_distance_locator_html",
 ]
