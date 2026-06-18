@@ -1,72 +1,29 @@
-# cnlecture
+# Complex Number Lecture Visualizations
 
-**Complex-number visualisation tools for lecture use.**
+Interactive figures for building geometric intuition in complex-number
+lectures.
 
-This package provides a small, focused set of Python utilities for building
-visual intuition about complex analysis: domain colouring, modular surfaces,
-streamplots, primitive roots, and more.
+## Visualizations
 
----
+1. [Euler's Formula](examples/euler_spiral.md)  
+   Watch the power series for \(e^{i\varphi}\) converge as a head-to-tail
+   chain of complex vectors.
 
-## What is this?
+2. [Squares on Quadrilateral Sides](examples/quadrilateral_squares.md)  
+   Drag a quadrilateral and see why the segments joining opposite square
+   centers stay equal and perpendicular.
 
-Complex numbers are easiest to understand through pictures.  
-This project collects the plotting infrastructure used in lecture demonstrations so that examples are:
+3. [Triangle and Squares](examples/triangle_midpoint.md)  
+   Isolate the two-side triangle construction behind the square-center
+   geometry.
 
-- **reproducible** — install once, run anywhere
-- **interactive** — tweak parameters, see the geometry move
-- **readable** — minimal code, maximum insight
+4. [Spiral Velocity](examples/spiral_velocity.md)  
+   Compare a finite step on \(Z(t)=e^{at}e^{ibt}\) with the infinitesimal
+   velocity triangle.
 
----
+5. [Cotes' Theorem](examples/cotes_theorem.md)  
+   Move a point along the real axis and track the distance product from the
+   roots of unity.
 
-## Quick example
-
-```python
-import numpy as np
-from cnlecture import functions as fc
-
-fc.modular_surface(power=3)
-```
-
-Or for domain colouring:
-
-```python
-import numpy as np
-from cnlecture import cplotting as cp
-
-n = 300
-x = np.linspace(-2, 2, n)
-y = np.linspace(-2, 2, n)
-X, Y = np.meshgrid(x, y)
-Z = X + 1j * Y
-
-f = (Z - 1) / (Z + 1)          # Möbius transformation
-cp.domain_coloring(X, Y, f)
-```
-
----
-
-## Mathematics covered
-
-| Topic | Notebook |
-|-------|----------|
-| Primitive roots of unity | [PrimitiveRoots](https://github.com/queezz/cnlecture/blob/master/examples/PrimitiveRoots.ipynb) |
-| Modular surfaces \( \|w\| = \|z^n\| \) | [ModularSurface](https://github.com/queezz/cnlecture/blob/master/examples/ModularSurface.ipynb) |
-| Euler's formula (power series) | [EulersSpiral](examples/euler_spiral.md) |
-| Squares on quadrilateral sides | [Quadrilateral squares](examples/quadrilateral_squares.md) |
-| Two side squares and midpoint | [Triangle midpoint](examples/triangle_midpoint.md) |
-| Power series convergence | [PowerSeries](https://github.com/queezz/cnlecture/blob/master/examples/PowerSeries.ipynb) |
-| Interactive parameter demo | [interactive_demo](https://github.com/queezz/cnlecture/blob/master/examples/interactive_demo.ipynb) |
-
----
-
-## Installation
-
-```bash
-python -m venv ~/.venvs/cnlecture
-source ~/.venvs/cnlecture/bin/activate      # Windows: Activate.ps1
-pip install --upgrade pip
-pip install -e ".[dev]"
-```
-
-See [Getting Started](getting_started.md) for the full workflow.
+Developer setup, API documentation, and migration notes are grouped under
+[Dev](getting_started.md).
